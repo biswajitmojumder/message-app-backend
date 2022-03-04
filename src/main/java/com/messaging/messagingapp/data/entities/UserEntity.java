@@ -26,7 +26,7 @@ public class UserEntity extends BaseEntity{
     @NotBlank
     private String publicName;
     private String profilePicLink;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     private List<RoleEntity> roles;
     @ManyToMany
     private List<ChatEntity> chats;
