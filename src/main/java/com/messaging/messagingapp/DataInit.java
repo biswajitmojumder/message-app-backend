@@ -47,7 +47,7 @@ public class DataInit implements CommandLineRunner {
             userServiceImplementation.registerUser(
                     new RegisterUserBindingModel(
                             "admin",
-                            passwordEncoder.encode("test"),
+                            "test",
                             "test@admin.bg",
                             "admin adminov"));
         }

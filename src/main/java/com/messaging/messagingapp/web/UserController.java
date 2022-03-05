@@ -4,9 +4,10 @@ import com.messaging.messagingapp.data.models.bindingModel.RegisterUserBindingMo
 import com.messaging.messagingapp.services.implementations.UserServiceImplementation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.servlet.http.HttpServletRequest;
 import java.security.InvalidParameterException;
 
 @Controller
@@ -32,5 +33,12 @@ public class UserController {
             return ResponseEntity.status(201).build();
         }
         return ResponseEntity.badRequest().body("Empty parameters not allowed");
+    }
+
+    @GetMapping("/is-logged-in")
+    public ResponseEntity<?> isCurrentSessionValid(HttpServletRequest request){
+        if(request.isRequestedSessionIdValid())
+            return ResponseEntity.ok().build();
+        return ResponseEntity.status(403).build();
     }
 }
