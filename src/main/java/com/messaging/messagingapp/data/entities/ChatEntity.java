@@ -11,8 +11,9 @@ import java.util.List;
 @Getter
 @Setter
 public class ChatEntity extends BaseEntity{
-    @ManyToMany(mappedBy = "chats")
-    private List<UserEntity> participants;
+    @OneToMany(mappedBy = "chat")
+    private List<ChatParticipantEntity> participants;
     @OneToMany(mappedBy = "chat")
     private List<MessageEntity> messages;
+    private String backgroundImageLink;
 }

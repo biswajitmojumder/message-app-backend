@@ -44,6 +44,11 @@ public class UserServiceImplementation implements UserService {
         else throw new InvalidParameterException("Username is taken!");
     }
 
+    @Override
+    public UserEntity returnUserByUsername(String username) {
+        return null;
+    }
+
     private boolean isUsernameTaken(String username){
         return userRepository.findByUsername(username).isPresent();
     }
