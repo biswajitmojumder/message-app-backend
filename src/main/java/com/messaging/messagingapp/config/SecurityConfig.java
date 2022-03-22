@@ -1,9 +1,9 @@
 package com.messaging.messagingapp.config;
 
-import com.messaging.messagingapp.security.LogOutSuccessHandler;
-import com.messaging.messagingapp.security.LoginFailureHandler;
-import com.messaging.messagingapp.security.LoginHandler;
-import com.messaging.messagingapp.security.LoginSuccessHandler;
+import com.messaging.messagingapp.security.Handlers.LogOutSuccessHandler;
+import com.messaging.messagingapp.security.Handlers.LoginFailureHandler;
+import com.messaging.messagingapp.security.Handlers.LoginHandler;
+import com.messaging.messagingapp.security.Handlers.LoginSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -49,19 +49,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers(HttpMethod.POST, "/api/register").anonymous()
+                .antMatchers(HttpMethod.POST, "/register").anonymous()
                 .and()
                 .authorizeRequests().anyRequest().authenticated()
                 .and()
                 .formLogin()
-                .loginProcessingUrl("/api/login")
                 .usernameParameter(UsernamePasswordAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY)
                 .passwordParameter(UsernamePasswordAuthenticationFilter.SPRING_SECURITY_FORM_PASSWORD_KEY)
                 .successHandler(loginSuccessHandler)
                 .failureHandler(loginFailureHandler)
                 .and()
                 .logout()
-                .logoutUrl("/api/logout")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .logoutSuccessHandler(logOutSuccessHandler)

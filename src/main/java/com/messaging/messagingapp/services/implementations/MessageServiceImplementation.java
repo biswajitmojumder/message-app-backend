@@ -40,7 +40,7 @@ public class MessageServiceImplementation implements MessageService {
     }
 
     private void saveMessage(MessageBindingModel incomingMessage, String senderUsername) throws FileNotFoundException {
-        ChatEntity chat = chatServiceImplementation.returnChatById(incomingMessage.getChatId());
+        ChatEntity chat = chatServiceImplementation.returnInnerChatById(incomingMessage.getChatId());
         MessageEntity newMessage = new MessageEntity();
         modelMapper.map(incomingMessage, newMessage);
         newMessage.setChat(chat);
@@ -53,10 +53,5 @@ public class MessageServiceImplementation implements MessageService {
             replyMessageOrNull.ifPresent(newMessage::setReplyingTo);
         }
         messageRepository.save(newMessage);
-    }
-    private MessageViewModel convertMessageToView(MessageBindingModel incomingMessage){
-        MessageViewModel outgoingMessage = new MessageViewModel();
-        //TODO: add logic here and populate MessageViewModel
-        return outgoingMessage;
     }
 }

@@ -1,4 +1,4 @@
-package com.messaging.messagingapp.security;
+package com.messaging.messagingapp.security.Handlers;
 
 import com.messaging.messagingapp.data.entities.UserEntity;
 import com.messaging.messagingapp.data.repositories.UserRepository;

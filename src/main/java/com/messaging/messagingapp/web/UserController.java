@@ -12,7 +12,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.security.InvalidParameterException;
 
 @Controller
-@RequestMapping("/api")
 public class UserController {
     private final UserServiceImplementation userServiceImplementation;
 

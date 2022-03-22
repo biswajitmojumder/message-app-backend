@@ -13,7 +13,7 @@ import java.util.List;
 public class ChatEntity extends BaseEntity{
     @OneToMany(mappedBy = "chat")
     private List<ChatParticipantEntity> participants;
-    @OneToMany(mappedBy = "chat")
+    @OneToMany(mappedBy = "chat", fetch = FetchType.LAZY)
     private List<MessageEntity> messages;
     private String backgroundImageLink;
 }

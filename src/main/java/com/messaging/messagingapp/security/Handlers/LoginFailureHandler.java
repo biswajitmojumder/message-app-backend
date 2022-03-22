@@ -1,4 +1,4 @@
-package com.messaging.messagingapp.security;
+package com.messaging.messagingapp.security.Handlers;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
