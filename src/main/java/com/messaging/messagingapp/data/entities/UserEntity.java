@@ -28,6 +28,6 @@ public class UserEntity extends BaseEntity{
     private String profilePicLink;
     @ManyToMany(fetch = FetchType.EAGER)
     private List<RoleEntity> roles;
-    @OneToMany(mappedBy = "chat")
+    @OneToMany(mappedBy = "user")
     private List<ChatParticipantEntity> participants;
 }

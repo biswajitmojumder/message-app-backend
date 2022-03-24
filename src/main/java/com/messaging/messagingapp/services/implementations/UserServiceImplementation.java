@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.InvalidParameterException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserServiceImplementation implements UserService {
@@ -30,7 +31,7 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public void registerUser(RegisterUserBindingModel newUser) throws InvalidParameterException{
+    public UserEntity registerUser(RegisterUserBindingModel newUser) throws InvalidParameterException{
         if(!isUsernameTaken(newUser.getUsername())){
             if(!isEmailTaken(newUser.getEmail())){
                 UserEntity user = new UserEntity();
@@ -38,6 +39,7 @@ public class UserServiceImplementation implements UserService {
                 user.setPassword(passwordEncoder.encode(newUser.getPassword()));
                 user.setRoles(List.of(roleServiceImplementation.returnUserRole()));
                 userRepository.save(user);
+                return user;
             }
             else throw new InvalidParameterException("Email is taken!");
         }
@@ -46,7 +48,18 @@ public class UserServiceImplementation implements UserService {
 
     @Override
     public UserEntity returnUserByUsername(String username) {
-        return null;
+        Optional<UserEntity> userOrNull = userRepository.findByUsername(username);
+        if(userOrNull.isPresent())
+            return userOrNull.get();
+        throw new NullPointerException("User not found");
+    }
+
+    @Override
+    public UserEntity returnUserById(Long id) {
+        Optional<UserEntity> userOrNull = userRepository.findById(id);
+        if(userOrNull.isPresent())
+            return userOrNull.get();
+        throw new NullPointerException("User not found");
     }
 
     private boolean isUsernameTaken(String username){

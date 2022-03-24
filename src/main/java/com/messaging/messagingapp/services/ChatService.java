@@ -11,5 +11,5 @@ public interface ChatService {
     ChatEntity returnInnerChatById(Long chatId) throws FileNotFoundException;
     ChatMessagesViewModel returnOuterChatById(Long chatId, String loggedUserUsername);
     List<ChatListViewModel> loadChatListOfLoggedUser(String username);
-    void createNewChat(String loggedUserUsername, Long otherUserId);
+    void createNewChat(String loggedUserUsername, String otherUserUsername);
 }

@@ -1,6 +1,8 @@
 package com.messaging.messagingapp.services.implementations;
 
+import com.messaging.messagingapp.data.entities.ChatEntity;
 import com.messaging.messagingapp.data.entities.ChatParticipantEntity;
+import com.messaging.messagingapp.data.entities.UserEntity;
 import com.messaging.messagingapp.data.repositories.ParticipantRepository;
 import com.messaging.messagingapp.services.ParticipantService;
 import org.springframework.stereotype.Service;
@@ -11,9 +13,12 @@ import java.util.Optional;
 @Service
 public class ParticipantServiceImplementation implements ParticipantService {
     private final ParticipantRepository participantRepository;
+    private final UserServiceImplementation userServiceImplementation;
 
-    public ParticipantServiceImplementation(ParticipantRepository participantRepository) {
+    public ParticipantServiceImplementation(ParticipantRepository participantRepository,
+                                            UserServiceImplementation userServiceImplementation) {
         this.participantRepository = participantRepository;
+        this.userServiceImplementation = userServiceImplementation;
     }
 
     @Override
@@ -32,7 +37,13 @@ public class ParticipantServiceImplementation implements ParticipantService {
     }
 
     @Override
-    public void changeParticipantNickname(Long id, String newNickname) {
-
+    public ChatParticipantEntity createAParticipant(String usernameOfUser, ChatEntity chat) {
+        UserEntity user = userServiceImplementation.returnUserByUsername(usernameOfUser);
+        ChatParticipantEntity newParticipant = new ChatParticipantEntity();
+        newParticipant.setUser(user);
+        newParticipant.setNickname(user.getPublicName());
+        newParticipant.setChat(chat);
+        participantRepository.save(newParticipant);
+        return newParticipant;
     }
 }

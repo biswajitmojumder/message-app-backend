@@ -14,6 +14,6 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
         response.getWriter().println("Wrong username or password");
-        response.setStatus(401);
+        response.setStatus(404);
     }
 }

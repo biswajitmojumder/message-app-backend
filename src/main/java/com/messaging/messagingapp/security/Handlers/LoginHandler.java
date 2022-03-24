@@ -24,11 +24,11 @@ public class LoginHandler implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<UserEntity> userOrNull = userRepository.findByUsername(username);
+        Optional<UserEntity> userOrNull = userRepository.findByEmail(username);
         if(userOrNull.isPresent()){
             return userEntityToUserDetails(userOrNull.get());
         }
-        throw new UsernameNotFoundException("Username not found");
+        throw new UsernameNotFoundException("Email not found");
     }
 
     private UserDetails userEntityToUserDetails(UserEntity user){
