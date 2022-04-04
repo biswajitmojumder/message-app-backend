@@ -2,6 +2,7 @@ package com.messaging.messagingapp.services.implementations;
 
 import com.messaging.messagingapp.data.entities.UserEntity;
 import com.messaging.messagingapp.data.models.bindingModel.RegisterUserBindingModel;
+import com.messaging.messagingapp.data.models.viewModel.SmallUserInfoViewModel;
 import com.messaging.messagingapp.data.repositories.UserRepository;
 import com.messaging.messagingapp.services.UserService;
 import org.modelmapper.ModelMapper;
@@ -60,6 +61,14 @@ public class UserServiceImplementation implements UserService {
         if(userOrNull.isPresent())
             return userOrNull.get();
         throw new NullPointerException("User not found");
+    }
+
+    @Override
+    public SmallUserInfoViewModel returnSmallInfoOfLoggedUser(String username) {
+        UserEntity user = returnUserByUsername(username);
+        SmallUserInfoViewModel mappedUser = new SmallUserInfoViewModel();
+        modelMapper.map(user, mappedUser);
+        return mappedUser;
     }
 
     private boolean isUsernameTaken(String username){

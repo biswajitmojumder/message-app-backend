@@ -6,6 +6,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class MessageViewModel {
+    private String senderUsername;
+    private String senderNickname;
     private String textContent;
     private String imageLink;
+    private ReplyMessageViewModel replyTo;
 }

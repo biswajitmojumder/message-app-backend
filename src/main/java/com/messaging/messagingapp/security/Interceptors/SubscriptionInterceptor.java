@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.io.FileNotFoundException;
 import java.security.Principal;
 import java.util.Arrays;
-import java.util.Objects;
 
 @Service
 public class SubscriptionInterceptor implements ChannelInterceptor {
@@ -25,10 +24,10 @@ public class SubscriptionInterceptor implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(message);
-        if(Objects.equals(headerAccessor.getCommand(), StompCommand.SUBSCRIBE)){
-            String[] splitDestination = (String[]) Arrays
+        if(headerAccessor.getCommand().equals(StompCommand.SUBSCRIBE)){
+            String[] splitDestination = Arrays
                     .stream(headerAccessor.getDestination().split("/"))
-                    .toArray();
+                    .toArray(String[]::new);
             Long chatId = Long.parseLong(splitDestination[splitDestination.length - 1]);
             Principal user = headerAccessor.getUser();
             try {

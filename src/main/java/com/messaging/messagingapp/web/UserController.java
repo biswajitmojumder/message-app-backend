@@ -1,6 +1,7 @@
 package com.messaging.messagingapp.web;
 
 import com.messaging.messagingapp.data.models.bindingModel.RegisterUserBindingModel;
+import com.messaging.messagingapp.data.models.viewModel.SmallUserInfoViewModel;
 import com.messaging.messagingapp.services.implementations.UserServiceImplementation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.InvalidParameterException;
+import java.security.Principal;
 
 @Controller
 public class UserController {
@@ -41,5 +43,11 @@ public class UserController {
         if(request.isRequestedSessionIdValid())
             return ResponseEntity.ok().build();
         return ResponseEntity.status(403).build();
+    }
+
+    @GetMapping("/user-info/small")
+    public ResponseEntity<SmallUserInfoViewModel> returnSmallUserInfo(Principal principal){
+        SmallUserInfoViewModel user = userServiceImplementation.returnSmallInfoOfLoggedUser(principal.getName());
+        return ResponseEntity.ok(user);
     }
 }

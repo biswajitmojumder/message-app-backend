@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface ChatService {
     ChatEntity returnInnerChatById(Long chatId) throws FileNotFoundException;
-    ChatMessagesViewModel returnOuterChatById(Long chatId, String loggedUserUsername);
     List<ChatListViewModel> loadChatListOfLoggedUser(String username);
-    void createNewChat(String loggedUserUsername, String otherUserUsername);
+    ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername);
+    Boolean doesUserParticipateInChat(String username, Long chatId);
 }
