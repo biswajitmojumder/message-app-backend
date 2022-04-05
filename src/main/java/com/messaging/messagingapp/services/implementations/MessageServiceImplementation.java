@@ -6,30 +6,37 @@ import com.messaging.messagingapp.data.models.bindingModel.MessageBindingModel;
 import com.messaging.messagingapp.data.models.viewModel.MessageViewModel;
 import com.messaging.messagingapp.data.models.viewModel.ReplyMessageViewModel;
 import com.messaging.messagingapp.data.repositories.MessageRepository;
+import com.messaging.messagingapp.data.repositories.PageableMessageRepository;
 import com.messaging.messagingapp.services.MessageService;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class MessageServiceImplementation implements MessageService {
     private final MessageRepository messageRepository;
+    private final PageableMessageRepository pageableMessageRepository;
     private final ChatServiceImplementation chatServiceImplementation;
     private final ParticipantServiceImplementation participantServiceImplementation;
     private final ModelMapper modelMapper;
     private final SimpMessagingTemplate messagingTemplate;
 
     public MessageServiceImplementation(MessageRepository messageRepository,
+                                        PageableMessageRepository pageableMessageRepository,
                                         ChatServiceImplementation chatServiceImplementation,
                                         ParticipantServiceImplementation participantServiceImplementation,
                                         ModelMapper modelMapper,
                                         SimpMessagingTemplate messagingTemplate) {
         this.messageRepository = messageRepository;
+        this.pageableMessageRepository = pageableMessageRepository;
         this.chatServiceImplementation = chatServiceImplementation;
         this.participantServiceImplementation = participantServiceImplementation;
         this.modelMapper = modelMapper;
@@ -56,13 +63,14 @@ public class MessageServiceImplementation implements MessageService {
     }
 
     @Override
-    public List<MessageViewModel> loadMessagesForChat(Long chatId, String usernameOfLoggedUser)
-            throws IllegalAccessException {
+    public List<MessageViewModel> loadPageableMessagesForChat(Long chatId, String usernameOfLoggedUser, int pageNum) throws IllegalAccessException {
         if(chatServiceImplementation.doesUserParticipateInChat(usernameOfLoggedUser, chatId)){
-            List<MessageEntity> unmappedMessages = messageRepository.last50MessagesOfAChat(chatId);
+            Pageable page = PageRequest.of(pageNum, 50);
+            List<MessageEntity> messages = pageableMessageRepository.getByChat_IdOrderByCreateTimeDesc(chatId, page);
+            Collections.reverse(messages);
             List<MessageViewModel> mappedMessages = new ArrayList<>();
-            for (MessageEntity message :
-                    unmappedMessages) {
+            for (MessageEntity message:
+                    messages) {
                 MessageViewModel mappedMessage = new MessageViewModel();
                 modelMapper.map(message, mappedMessage);
                 mappedMessage.setSenderNickname(message.getSender().getNickname());

@@ -100,7 +100,7 @@ public class DataInit implements CommandLineRunner {
             for (int i = 0; i <= 69; i++){
                 MessageBindingModel firstMessage = new MessageBindingModel();
                 firstMessage.setChatId(chat.getId());
-                firstMessage.setTextContent("test message 1");
+                firstMessage.setTextContent("test message " + i);
                 messageServiceImplementation.sendMessage(firstMessage, this.firstUser.getUsername());
             }
         }

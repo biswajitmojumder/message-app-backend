@@ -11,7 +11,7 @@ import java.util.List;
 @Getter
 @Setter
 public class ChatEntity extends BaseEntity{
-    @OneToMany(mappedBy = "chat")
+    @OneToMany(mappedBy = "chat", fetch = FetchType.EAGER)
     private List<ChatParticipantEntity> participants;
     @OneToMany(mappedBy = "chat", fetch = FetchType.LAZY)
     private List<MessageEntity> messages;

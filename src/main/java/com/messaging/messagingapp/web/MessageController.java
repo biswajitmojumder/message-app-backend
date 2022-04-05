@@ -5,10 +5,7 @@ import com.messaging.messagingapp.data.models.viewModel.MessageViewModel;
 import com.messaging.messagingapp.services.implementations.MessageServiceImplementation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
 import java.security.Principal;
@@ -37,10 +34,16 @@ public class MessageController {
     }
 
     @GetMapping("/load/{chatId}")
-    public ResponseEntity<?> loadChatMessages(@PathVariable Long chatId, Principal principal){
+    public ResponseEntity<?> loadChatMessages(
+            @PathVariable Long chatId,
+            @RequestParam(value = "page", required = false) Integer pageNum,
+            Principal principal){
+        if(pageNum == null){
+            pageNum = 0;
+        }
         List<MessageViewModel> messages;
         try {
-            messages = messageServiceImplementation.loadMessagesForChat(chatId, principal.getName());
+            messages = messageServiceImplementation.loadPageableMessagesForChat(chatId, principal.getName(), pageNum);
         } catch (IllegalAccessException e) {
             return ResponseEntity.status(403).build();
         }

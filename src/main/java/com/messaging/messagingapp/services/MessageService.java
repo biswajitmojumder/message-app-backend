@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface MessageService {
     void sendMessage(MessageBindingModel incomingMessage, String senderUsername) throws FileNotFoundException, IllegalAccessException;
-    List<MessageViewModel> loadMessagesForChat(Long chatId, String usernameOfLoggedUser) throws IllegalAccessException;
+    List<MessageViewModel> loadPageableMessagesForChat(Long chatId, String usernameOfLoggedUser, int pageNum) throws IllegalAccessException;
 }

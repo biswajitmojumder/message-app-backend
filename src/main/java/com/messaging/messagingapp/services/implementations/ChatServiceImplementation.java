@@ -6,6 +6,7 @@ import com.messaging.messagingapp.data.entities.UserEntity;
 import com.messaging.messagingapp.data.models.viewModel.ChatListViewModel;
 import com.messaging.messagingapp.data.repositories.ChatRepository;
 import com.messaging.messagingapp.services.ChatService;
+import org.hibernate.Hibernate;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
