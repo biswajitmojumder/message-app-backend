@@ -71,6 +71,11 @@ public class UserServiceImplementation implements UserService {
         return mappedUser;
     }
 
+    @Override
+    public List<SmallUserInfoViewModel> searchUsersByUsername(String username) {
+        return null;
+    }
+
     private boolean isUsernameTaken(String username){
         return userRepository.findByUsername(username).isPresent();
     }

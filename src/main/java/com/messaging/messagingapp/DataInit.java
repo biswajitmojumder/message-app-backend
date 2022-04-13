@@ -97,7 +97,7 @@ public class DataInit implements CommandLineRunner {
     }
     private void messageInit() throws FileNotFoundException, IllegalAccessException {
         if(messageRepository.count() == 0){
-            for (int i = 0; i <= 69; i++){
+            for (int i = 0; i <= 420; i++){
                 MessageBindingModel firstMessage = new MessageBindingModel();
                 firstMessage.setChatId(chat.getId());
                 firstMessage.setTextContent("test message " + i);

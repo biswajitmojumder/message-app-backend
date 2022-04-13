@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.InvalidParameterException;
@@ -49,5 +50,10 @@ public class UserController {
     public ResponseEntity<SmallUserInfoViewModel> returnSmallUserInfo(Principal principal){
         SmallUserInfoViewModel user = userServiceImplementation.returnSmallInfoOfLoggedUser(principal.getName());
         return ResponseEntity.ok(user);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchUserByUsername(@RequestParam(value = "username", required = false) String username){
+        return ResponseEntity.status(403).build();
     }
 }

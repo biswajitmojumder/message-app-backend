@@ -10,6 +10,7 @@ import org.hibernate.Hibernate;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,6 +77,7 @@ public class ChatServiceImplementation implements ChatService {
     }
 
     @Override
+    @Transactional
     public Boolean doesUserParticipateInChat(String username, Long chatId) {
         UserEntity user = userServiceImplementation.returnUserByUsername(username);
         List<Long> test = user.getParticipants().stream().map(p -> p.getChat().getId()).collect(Collectors.toList());
