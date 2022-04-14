@@ -6,8 +6,9 @@ import com.messaging.messagingapp.data.entities.UserEntity;
 import com.messaging.messagingapp.data.models.viewModel.ChatListViewModel;
 import com.messaging.messagingapp.data.repositories.ChatRepository;
 import com.messaging.messagingapp.services.ChatService;
-import org.hibernate.Hibernate;
 import org.modelmapper.ModelMapper;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -23,15 +24,18 @@ public class ChatServiceImplementation implements ChatService {
     private final UserServiceImplementation userServiceImplementation;
     private final ParticipantServiceImplementation participantServiceImplementation;
     private final ModelMapper modelMapper;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public ChatServiceImplementation(ChatRepository chatRepository,
                                      UserServiceImplementation userServiceImplementation,
                                      ParticipantServiceImplementation participantServiceImplementation,
-                                     ModelMapper modelMapper) {
+                                     ModelMapper modelMapper,
+                                     SimpMessagingTemplate messagingTemplate) {
         this.chatRepository = chatRepository;
         this.userServiceImplementation = userServiceImplementation;
         this.participantServiceImplementation = participantServiceImplementation;
         this.modelMapper = modelMapper;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @Override
@@ -68,12 +72,17 @@ public class ChatServiceImplementation implements ChatService {
     }
 
     @Override
-    public ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername) {
-        ChatEntity chat = new ChatEntity();
-        chatRepository.save(chat);
-        participantServiceImplementation.createAParticipant(loggedUserUsername, chat);
-        participantServiceImplementation.createAParticipant(otherUserUsername, chat);
-        return chat;
+    public ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername) throws DuplicateKeyException{
+        if(!doesLoggedUserHaveAChatWithOtherUser(loggedUserUsername, otherUserUsername)) {
+            ChatEntity chat = new ChatEntity();
+            chatRepository.save(chat);
+            participantServiceImplementation.createAParticipant(loggedUserUsername, chat);
+            participantServiceImplementation.createAParticipant(otherUserUsername, chat);
+            messagingTemplate.convertAndSend("/queue/chat-list/" + loggedUserUsername, chat.getId());
+            messagingTemplate.convertAndSend("/queue/chat-list/" + otherUserUsername, chat.getId());
+            return chat;
+        }
+        else throw new DuplicateKeyException("You already have a chat with this user!");
     }
 
     @Override
@@ -83,6 +92,20 @@ public class ChatServiceImplementation implements ChatService {
         List<Long> test = user.getParticipants().stream().map(p -> p.getChat().getId()).collect(Collectors.toList());
         if(test.contains(chatId)){
             return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Boolean doesLoggedUserHaveAChatWithOtherUser(String loggedUserUsername, String otherUserUsername) {
+        for (ChatEntity chat :
+                participantServiceImplementation.returnListOfChatsOfUser(loggedUserUsername)) {
+            for (ChatParticipantEntity participant:
+                 chat.getParticipants()) {
+                if (participant.getUser().getUsername().equals(otherUserUsername)){
+                    return true;
+                }
+            }
         }
         return false;
     }

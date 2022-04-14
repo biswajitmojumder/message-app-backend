@@ -11,4 +11,5 @@ public class MessageViewModel {
     private String textContent;
     private String imageLink;
     private ReplyMessageViewModel replyTo;
+    private Long chatId;
 }

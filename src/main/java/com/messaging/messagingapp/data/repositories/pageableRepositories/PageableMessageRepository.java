@@ -1,4 +1,4 @@
-package com.messaging.messagingapp.data.repositories;
+package com.messaging.messagingapp.data.repositories.pageableRepositories;
 
 import com.messaging.messagingapp.data.entities.MessageEntity;
 import org.springframework.data.domain.Pageable;

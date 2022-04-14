@@ -4,28 +4,35 @@ import com.messaging.messagingapp.data.entities.UserEntity;
 import com.messaging.messagingapp.data.models.bindingModel.RegisterUserBindingModel;
 import com.messaging.messagingapp.data.models.viewModel.SmallUserInfoViewModel;
 import com.messaging.messagingapp.data.repositories.UserRepository;
+import com.messaging.messagingapp.data.repositories.pageableRepositories.PageableUserRepository;
 import com.messaging.messagingapp.services.UserService;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class UserServiceImplementation implements UserService {
     private final UserRepository userRepository;
+    private final PageableUserRepository pageableUserRepository;
     private final RoleServiceImplementation roleServiceImplementation;
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
 
     public UserServiceImplementation(
             UserRepository userRepository,
+            PageableUserRepository pageableUserRepository,
             RoleServiceImplementation roleServiceImplementation,
             ModelMapper modelMapper,
             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.pageableUserRepository = pageableUserRepository;
         this.roleServiceImplementation = roleServiceImplementation;
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
@@ -72,8 +79,17 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public List<SmallUserInfoViewModel> searchUsersByUsername(String username) {
-        return null;
+    public List<SmallUserInfoViewModel> searchUsersByUsername(String username, int pageNum) {
+        Pageable page = PageRequest.of(pageNum, 10);
+        List<UserEntity> foundUsers = pageableUserRepository.findAllByUsernameContains(username, page);
+        List<SmallUserInfoViewModel> mappedFoundUsers = new ArrayList<>();
+        for (UserEntity user :
+                foundUsers) {
+            SmallUserInfoViewModel mappedUser = new SmallUserInfoViewModel();
+            modelMapper.map(user, mappedUser);
+            mappedFoundUsers.add(mappedUser);
+        }
+        return mappedFoundUsers;
     }
 
     private boolean isUsernameTaken(String username){

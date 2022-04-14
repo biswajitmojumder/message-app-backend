@@ -12,4 +12,5 @@ public interface ChatService {
     List<ChatListViewModel> loadChatListOfLoggedUser(String username);
     ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername);
     Boolean doesUserParticipateInChat(String username, Long chatId);
+    Boolean doesLoggedUserHaveAChatWithOtherUser(String loggedUserUsername, String otherUserUsername);
 }

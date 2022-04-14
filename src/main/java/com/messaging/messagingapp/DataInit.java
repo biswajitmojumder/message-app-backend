@@ -82,6 +82,14 @@ public class DataInit implements CommandLineRunner {
                             "test testov"
                     )
             );
+            userServiceImplementation.registerUser(
+                    new RegisterUserBindingModel(
+                            "test2",
+                            "test",
+                            "test2@test.bg",
+                            "test2 testov2"
+                    )
+            );
         }
         else {
             this.firstUser = userRepository.findByUsername("admin").get();

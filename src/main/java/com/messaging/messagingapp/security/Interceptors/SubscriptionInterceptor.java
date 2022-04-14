@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.io.FileNotFoundException;
 import java.security.Principal;
 import java.util.Arrays;
+import java.util.Objects;
 
 @Service
 public class SubscriptionInterceptor implements ChannelInterceptor {
@@ -24,17 +25,26 @@ public class SubscriptionInterceptor implements ChannelInterceptor {
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(message);
-        if(headerAccessor.getCommand().equals(StompCommand.SUBSCRIBE)){
+        if(headerAccessor.getCommand().equals(StompCommand.SUBSCRIBE)) {
             String[] splitDestination = Arrays
                     .stream(headerAccessor.getDestination().split("/"))
                     .toArray(String[]::new);
-            Long chatId = Long.parseLong(splitDestination[splitDestination.length - 1]);
-            Principal user = headerAccessor.getUser();
-            try {
-                participantServiceImplementation.returnParticipantByChatIdAndUsername(user.getName(), chatId);
-            } catch (FileNotFoundException e) {
-                throw new MessageDeliveryException("You cannot use this chat since you are not a participant in it.");
+            if (splitDestination[2].equals("chat")) {
+                Long chatId = Long.parseLong(splitDestination[splitDestination.length - 1]);
+                Principal user = headerAccessor.getUser();
+                try {
+                    participantServiceImplementation.returnParticipantByChatIdAndUsername(user.getName(), chatId);
+                } catch (FileNotFoundException e) {
+                    throw new MessageDeliveryException("You cannot use this chat since you are not a participant in it.");
+                }
+                return ChannelInterceptor.super.preSend(message, channel);
             }
+            if (splitDestination[2].equals("chat-list")){
+                if(splitDestination[3].equals(headerAccessor.getUser().getName())){
+                    return ChannelInterceptor.super.preSend(message, channel);
+                }
+            }
+            throw new MessageDeliveryException("");
         }
         return ChannelInterceptor.super.preSend(message, channel);
     }

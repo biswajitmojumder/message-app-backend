@@ -11,5 +11,5 @@ public interface UserService {
     UserEntity returnUserByUsername(String username);
     UserEntity returnUserById(Long id);
     SmallUserInfoViewModel returnSmallInfoOfLoggedUser(String username);
-    List<SmallUserInfoViewModel> searchUsersByUsername(String username);
+    List<SmallUserInfoViewModel> searchUsersByUsername(String username, int pageNum);
 }

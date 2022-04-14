@@ -5,9 +5,11 @@ import com.messaging.messagingapp.data.entities.ChatParticipantEntity;
 import com.messaging.messagingapp.data.entities.UserEntity;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 
 public interface ParticipantService {
     ChatParticipantEntity returnParticipantById(Long id);
     ChatParticipantEntity returnParticipantByChatIdAndUsername(String username, Long chatId) throws FileNotFoundException;
     ChatParticipantEntity createAParticipant(String usernameOfUser, ChatEntity chat);
+    List<ChatEntity> returnListOfChatsOfUser(String username);
 }

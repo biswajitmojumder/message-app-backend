@@ -6,7 +6,7 @@ import com.messaging.messagingapp.data.models.bindingModel.MessageBindingModel;
 import com.messaging.messagingapp.data.models.viewModel.MessageViewModel;
 import com.messaging.messagingapp.data.models.viewModel.ReplyMessageViewModel;
 import com.messaging.messagingapp.data.repositories.MessageRepository;
-import com.messaging.messagingapp.data.repositories.PageableMessageRepository;
+import com.messaging.messagingapp.data.repositories.pageableRepositories.PageableMessageRepository;
 import com.messaging.messagingapp.services.MessageService;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.PageRequest;
@@ -57,6 +57,7 @@ public class MessageServiceImplementation implements MessageService {
                 modelMapper.map(message.getReplyingTo(), reply);
                 messageToSend.setReplyTo(reply);
             }
+            messageToSend.setChatId(incomingMessage.getChatId());
             messagingTemplate.convertAndSend("/queue/chat/" + incomingMessage.getChatId(), messageToSend);
         }
         else throw new IllegalAccessException();

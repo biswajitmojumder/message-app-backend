@@ -8,7 +8,9 @@ import com.messaging.messagingapp.services.ParticipantService;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ParticipantServiceImplementation implements ParticipantService {
@@ -45,5 +47,15 @@ public class ParticipantServiceImplementation implements ParticipantService {
         newParticipant.setChat(chat);
         participantRepository.save(newParticipant);
         return newParticipant;
+    }
+
+    @Override
+    public List<ChatEntity> returnListOfChatsOfUser(String username) {
+        List<ChatEntity> chats = participantRepository
+                .getAllByUser_Username(username)
+                .stream()
+                .map(ChatParticipantEntity::getChat)
+                .collect(Collectors.toList());
+        return chats;
     }
 }

@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import javax.servlet.http.HttpServletRequest;
 import java.security.InvalidParameterException;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Controller
 public class UserController {
@@ -53,7 +55,11 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<?> searchUserByUsername(@RequestParam(value = "username", required = false) String username){
-        return ResponseEntity.status(403).build();
+    public ResponseEntity<?> searchUserByUsername(
+            @RequestParam(value = "username") String username,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int pageNum){
+        List<SmallUserInfoViewModel> foundUsers;
+        foundUsers = userServiceImplementation.searchUsersByUsername(username, pageNum);
+        return ResponseEntity.ok(foundUsers);
     }
 }
