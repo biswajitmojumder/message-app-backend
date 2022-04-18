@@ -49,4 +49,16 @@ public class MessageController {
         }
         return ResponseEntity.ok(messages);
     }
+
+    @DeleteMapping("{messageId}")
+    public ResponseEntity<?> deleteChatMessage(@PathVariable Long messageId, Principal principal){
+        try {
+            messageServiceImplementation.deleteMessageById(messageId, principal.getName());
+        } catch (NoSuchFieldException e) {
+            return ResponseEntity.status(404).body(e.getLocalizedMessage());
+        } catch (IllegalAccessException e) {
+            return ResponseEntity.status(403).build();
+        }
+        return ResponseEntity.ok().build();
+    }
 }

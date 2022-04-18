@@ -4,10 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
@@ -21,7 +18,9 @@ public class MessageEntity extends BaseEntity{
     private ChatEntity chat;
     @ManyToOne
     private MessageEntity replyingTo;
+    @Lob
     private String textContent;
+    private boolean replyDeleted = false;
     private String imageLink;
     private Boolean isSeen;
     @CreationTimestamp

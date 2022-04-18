@@ -88,6 +88,21 @@ public class MessageServiceImplementation implements MessageService {
         throw new IllegalAccessException();
     }
 
+    @Override
+    public void deleteMessageById(Long messageId, String loggedUserUsername)
+            throws NoSuchFieldException,
+            IllegalAccessException {
+        Optional<MessageEntity> message = messageRepository.findById(messageId);
+        if(message.isPresent()){
+            if(message.get().getSender().getUser().getUsername().equals(loggedUserUsername)){
+                changeReplyMessageWhenDeletingMessage(message.get());
+                messageRepository.delete(message.get());
+            }
+            else throw new IllegalAccessException();
+        }
+        else throw new NoSuchFieldException("Message not found");
+    }
+
     private MessageEntity saveMessage(MessageBindingModel incomingMessage, String senderUsername)
             throws FileNotFoundException {
         ChatEntity chat = chatServiceImplementation.returnInnerChatById(incomingMessage.getChatId());
@@ -106,5 +121,14 @@ public class MessageServiceImplementation implements MessageService {
         return newMessage;
     }
 
-
+    private void changeReplyMessageWhenDeletingMessage(MessageEntity message){
+        List<MessageEntity> messagesToEdit = messageRepository.findAllByReplyingTo(message);
+        if(messagesToEdit.size() > 0){
+            for (MessageEntity messageToEdit :
+                    messagesToEdit) {
+                messageToEdit.setReplyingTo(null);
+                messageToEdit.setReplyDeleted(true);
+            }
+        }
+    }
 }

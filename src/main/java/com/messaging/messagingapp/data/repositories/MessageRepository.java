@@ -11,4 +11,5 @@ import java.util.List;
 public interface MessageRepository extends JpaRepository<MessageEntity, Long> {
     @Query("select m from MessageEntity m where m.chat.id = ?1 order by m.createTime asc ")
     List<MessageEntity> last50MessagesOfAChat(Long chatId);
+    List<MessageEntity> findAllByReplyingTo(MessageEntity message);
 }
