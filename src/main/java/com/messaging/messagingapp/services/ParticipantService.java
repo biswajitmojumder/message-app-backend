@@ -2,14 +2,14 @@ package com.messaging.messagingapp.services;
 
 import com.messaging.messagingapp.data.entities.ChatEntity;
 import com.messaging.messagingapp.data.entities.ChatParticipantEntity;
-import com.messaging.messagingapp.data.entities.UserEntity;
 
 import java.io.FileNotFoundException;
 import java.util.List;
 
 public interface ParticipantService {
-    ChatParticipantEntity returnParticipantById(Long id);
     ChatParticipantEntity returnParticipantByChatIdAndUsername(String username, Long chatId) throws FileNotFoundException;
+    Boolean returnParticipantUnseenMessagesByChatIdAndUsername(String username, Long chatId);
     ChatParticipantEntity createAParticipant(String usernameOfUser, ChatEntity chat);
     List<ChatEntity> returnListOfChatsOfUser(String username);
+    void nullUnseenMessagesForParticipantByLoggedUserAndChatId(String loggedUserUsername, Long chatId) throws FileNotFoundException;
 }

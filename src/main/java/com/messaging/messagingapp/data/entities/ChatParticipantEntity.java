@@ -21,4 +21,5 @@ public class ChatParticipantEntity extends BaseEntity{
     @OneToMany(mappedBy = "sender")
     private List<MessageEntity> messages;
     private String nickname;
+    private Boolean unseenMessages;
 }

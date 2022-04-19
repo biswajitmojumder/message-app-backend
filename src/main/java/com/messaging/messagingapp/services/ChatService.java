@@ -13,4 +13,5 @@ public interface ChatService {
     ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername);
     Boolean doesUserParticipateInChat(String username, Long chatId);
     Boolean doesLoggedUserHaveAChatWithOtherUser(String loggedUserUsername, String otherUserUsername);
+    void increaseUnseenMessagesForAllParticipantsOfAChat(Long chatId);
 }

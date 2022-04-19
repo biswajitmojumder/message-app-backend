@@ -2,14 +2,13 @@ package com.messaging.messagingapp.web;
 
 import com.messaging.messagingapp.data.models.viewModel.ChatListViewModel;
 import com.messaging.messagingapp.services.implementations.ChatServiceImplementation;
+import com.messaging.messagingapp.services.implementations.ParticipantServiceImplementation;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
+import java.io.FileNotFoundException;
 import java.security.Principal;
 import java.util.List;
 
@@ -17,9 +16,13 @@ import java.util.List;
 @RequestMapping("/chat")
 public class ChatController {
     private final ChatServiceImplementation chatServiceImplementation;
+    private final ParticipantServiceImplementation participantServiceImplementation;
 
-    public ChatController(ChatServiceImplementation chatServiceImplementation) {
+    public ChatController(
+            ChatServiceImplementation chatServiceImplementation,
+            ParticipantServiceImplementation participantServiceImplementation) {
         this.chatServiceImplementation = chatServiceImplementation;
+        this.participantServiceImplementation = participantServiceImplementation;
     }
 
     @GetMapping("/all")
@@ -41,5 +44,15 @@ public class ChatController {
             }
             return ResponseEntity.status(201).build();
         }
+    }
+
+    @PatchMapping("/null-unseen-messages")
+    public ResponseEntity<?> nullUnseenMessages(@RequestParam("chatId") Long chatId, Principal principal){
+        try {
+            participantServiceImplementation.nullUnseenMessagesForParticipantByLoggedUserAndChatId(principal.getName(), chatId);
+        } catch (FileNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getLocalizedMessage());
+        }
+        return ResponseEntity.ok().build();
     }
 }

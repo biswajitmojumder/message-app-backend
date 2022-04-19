@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -44,7 +43,7 @@ public class MessageController {
         List<MessageViewModel> messages;
         try {
             messages = messageServiceImplementation.loadPageableMessagesForChat(chatId, principal.getName(), pageNum);
-        } catch (IllegalAccessException e) {
+        } catch (IllegalAccessException | FileNotFoundException e) {
             return ResponseEntity.status(403).build();
         }
         return ResponseEntity.ok(messages);

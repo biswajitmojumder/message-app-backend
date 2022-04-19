@@ -24,18 +24,18 @@ public class ParticipantServiceImplementation implements ParticipantService {
     }
 
     @Override
-    public ChatParticipantEntity returnParticipantById(Long id) {
-        return null;
-    }
-
-    @Override
     public ChatParticipantEntity returnParticipantByChatIdAndUsername(String username, Long chatId)
             throws FileNotFoundException {
         Optional<ChatParticipantEntity> participantOrNull = participantRepository
                 .findByChat_IdAndUser_Username(chatId, username);
         if(participantOrNull.isPresent())
             return participantOrNull.get();
-        throw new FileNotFoundException("Participant not found.");
+        throw new FileNotFoundException("Chat not found.");
+    }
+
+    @Override
+    public Boolean returnParticipantUnseenMessagesByChatIdAndUsername(String username, Long chatId) {
+        return participantRepository.getUnseenMessagesByChatIdAndUsername(chatId, username);
     }
 
     @Override
@@ -57,5 +57,13 @@ public class ParticipantServiceImplementation implements ParticipantService {
                 .map(ChatParticipantEntity::getChat)
                 .collect(Collectors.toList());
         return chats;
+    }
+
+    @Override
+    public void nullUnseenMessagesForParticipantByLoggedUserAndChatId(String loggedUserUsername, Long chatId)
+            throws FileNotFoundException {
+        ChatParticipantEntity participant = returnParticipantByChatIdAndUsername(loggedUserUsername, chatId);
+        participant.setUnseenMessages(false);
+        participantRepository.save(participant);
     }
 }

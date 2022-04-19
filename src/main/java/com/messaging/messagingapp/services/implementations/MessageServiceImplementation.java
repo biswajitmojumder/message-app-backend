@@ -1,6 +1,7 @@
 package com.messaging.messagingapp.services.implementations;
 
 import com.messaging.messagingapp.data.entities.ChatEntity;
+import com.messaging.messagingapp.data.entities.ChatParticipantEntity;
 import com.messaging.messagingapp.data.entities.MessageEntity;
 import com.messaging.messagingapp.data.models.bindingModel.MessageBindingModel;
 import com.messaging.messagingapp.data.models.viewModel.MessageViewModel;
@@ -58,13 +59,17 @@ public class MessageServiceImplementation implements MessageService {
                 messageToSend.setReplyTo(reply);
             }
             messageToSend.setChatId(incomingMessage.getChatId());
+            messageToSend.setUnseenMessages(participantServiceImplementation
+                    .returnParticipantUnseenMessagesByChatIdAndUsername(senderUsername, incomingMessage.getChatId()));
             messagingTemplate.convertAndSend("/queue/chat/" + incomingMessage.getChatId(), messageToSend);
         }
         else throw new IllegalAccessException();
     }
 
     @Override
-    public List<MessageViewModel> loadPageableMessagesForChat(Long chatId, String usernameOfLoggedUser, int pageNum) throws IllegalAccessException {
+    public List<MessageViewModel> loadPageableMessagesForChat(Long chatId, String usernameOfLoggedUser, int pageNum)
+            throws IllegalAccessException,
+            FileNotFoundException {
         if(chatServiceImplementation.doesUserParticipateInChat(usernameOfLoggedUser, chatId)){
             Pageable page = PageRequest.of(pageNum, 50);
             List<MessageEntity> messages = pageableMessageRepository.getByChat_IdOrderByCreateTimeDesc(chatId, page);
@@ -83,6 +88,7 @@ public class MessageServiceImplementation implements MessageService {
                 }
                 mappedMessages.add(mappedMessage);
             }
+            participantServiceImplementation.nullUnseenMessagesForParticipantByLoggedUserAndChatId(usernameOfLoggedUser, chatId);
             return mappedMessages;
         }
         throw new IllegalAccessException();
@@ -105,19 +111,20 @@ public class MessageServiceImplementation implements MessageService {
 
     private MessageEntity saveMessage(MessageBindingModel incomingMessage, String senderUsername)
             throws FileNotFoundException {
+        ChatParticipantEntity sender = participantServiceImplementation
+                .returnParticipantByChatIdAndUsername(senderUsername, incomingMessage.getChatId());
         ChatEntity chat = chatServiceImplementation.returnInnerChatById(incomingMessage.getChatId());
         MessageEntity newMessage = new MessageEntity();
         modelMapper.map(incomingMessage, newMessage);
         newMessage.setChat(chat);
-        newMessage.setSender(participantServiceImplementation
-                .returnParticipantByChatIdAndUsername(senderUsername, incomingMessage.getChatId()));
-        newMessage.setIsSeen(false);
+        newMessage.setSender(sender);
         if (incomingMessage.getMessageReplyId() != null && incomingMessage.getMessageReplyId() != -1){
             Optional<MessageEntity> replyMessageOrNull = messageRepository
                     .findById(incomingMessage.getMessageReplyId());
             replyMessageOrNull.ifPresent(newMessage::setReplyingTo);
         }
         messageRepository.save(newMessage);
+        chatServiceImplementation.increaseUnseenMessagesForAllParticipantsOfAChat(incomingMessage.getChatId());
         return newMessage;
     }
 

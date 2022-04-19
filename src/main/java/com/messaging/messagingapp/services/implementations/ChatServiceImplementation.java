@@ -5,6 +5,7 @@ import com.messaging.messagingapp.data.entities.ChatParticipantEntity;
 import com.messaging.messagingapp.data.entities.UserEntity;
 import com.messaging.messagingapp.data.models.viewModel.ChatListViewModel;
 import com.messaging.messagingapp.data.repositories.ChatRepository;
+import com.messaging.messagingapp.data.repositories.ParticipantRepository;
 import com.messaging.messagingapp.services.ChatService;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DuplicateKeyException;
@@ -21,17 +22,20 @@ import java.util.stream.Collectors;
 @Service
 public class ChatServiceImplementation implements ChatService {
     private final ChatRepository chatRepository;
+    private final ParticipantRepository participantRepository;
     private final UserServiceImplementation userServiceImplementation;
     private final ParticipantServiceImplementation participantServiceImplementation;
     private final ModelMapper modelMapper;
     private final SimpMessagingTemplate messagingTemplate;
 
     public ChatServiceImplementation(ChatRepository chatRepository,
+                                     ParticipantRepository participantRepository,
                                      UserServiceImplementation userServiceImplementation,
                                      ParticipantServiceImplementation participantServiceImplementation,
                                      ModelMapper modelMapper,
                                      SimpMessagingTemplate messagingTemplate) {
         this.chatRepository = chatRepository;
+        this.participantRepository = participantRepository;
         this.userServiceImplementation = userServiceImplementation;
         this.participantServiceImplementation = participantServiceImplementation;
         this.modelMapper = modelMapper;
@@ -64,6 +68,9 @@ public class ChatServiceImplementation implements ChatService {
                 if(p.getUser() != user){
                     chatForList.setChatParticipantName(p.getNickname());
                     chatForList.setChatParticipantImageLink(p.getUser().getProfilePicLink());
+                }
+                else {
+                    chatForList.setUnseenMessages(p.getUnseenMessages());
                 }
             });
             listToReturn.add(chatForList);
@@ -108,5 +115,15 @@ public class ChatServiceImplementation implements ChatService {
             }
         }
         return false;
+    }
+
+    @Override
+    public void increaseUnseenMessagesForAllParticipantsOfAChat(Long chatId) {
+        List<ChatParticipantEntity> participantsOfChat = chatRepository.returnParticipantsOfChat(chatId);
+        for (ChatParticipantEntity participant :
+                participantsOfChat) {
+            participant.setUnseenMessages(true);
+            participantRepository.save(participant);
+        }
     }
 }

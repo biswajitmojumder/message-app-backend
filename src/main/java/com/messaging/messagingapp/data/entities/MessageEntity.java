@@ -22,7 +22,6 @@ public class MessageEntity extends BaseEntity{
     private String textContent;
     private boolean replyDeleted = false;
     private String imageLink;
-    private Boolean isSeen;
     @CreationTimestamp
     private Timestamp createTime;
 }

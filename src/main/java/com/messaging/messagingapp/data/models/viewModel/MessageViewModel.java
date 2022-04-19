@@ -14,4 +14,5 @@ public class MessageViewModel {
     private ReplyMessageViewModel replyTo;
     private Long chatId;
     private Boolean replyDeleted;
+    private Boolean unseenMessages;
 }

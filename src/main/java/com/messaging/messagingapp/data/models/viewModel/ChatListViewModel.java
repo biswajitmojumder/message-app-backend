@@ -9,4 +9,5 @@ public class ChatListViewModel {
     private Long id;
     private String chatParticipantName;
     private String chatParticipantImageLink;
+    private Boolean unseenMessages;
 }
