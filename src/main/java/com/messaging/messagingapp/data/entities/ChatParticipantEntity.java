@@ -22,4 +22,5 @@ public class ChatParticipantEntity extends BaseEntity{
     private List<MessageEntity> messages;
     private String nickname;
     private Boolean unseenMessages;
+    private Boolean chatClosed = false;
 }

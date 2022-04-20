@@ -1,6 +1,8 @@
 package com.messaging.messagingapp.web;
 
 import com.messaging.messagingapp.data.models.viewModel.ChatListViewModel;
+import com.messaging.messagingapp.data.models.viewModel.ChatParticipantViewModel;
+import com.messaging.messagingapp.exceptions.ChatNotFoundException;
 import com.messaging.messagingapp.services.implementations.ChatServiceImplementation;
 import com.messaging.messagingapp.services.implementations.ParticipantServiceImplementation;
 import org.springframework.dao.DuplicateKeyException;
@@ -8,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.FileNotFoundException;
 import java.security.Principal;
 import java.util.List;
 
@@ -31,6 +32,19 @@ public class ChatController {
         return ResponseEntity.ok(listOfChats);
     }
 
+    @GetMapping("/{chatId}/participant/all")
+    public ResponseEntity<?> returnParticipantsListOfChat(@PathVariable Long chatId, Principal principal){
+        List<ChatParticipantViewModel> participants;
+        try {
+            participants = chatServiceImplementation.returnParticipantsOfChat(chatId, principal.getName());
+        } catch (IllegalAccessException e) {
+            return ResponseEntity.status(403).build();
+        } catch (ChatNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getLocalizedMessage());
+        }
+        return ResponseEntity.ok(participants);
+    }
+
     @PostMapping("/create")
     public ResponseEntity<?> createChatWithTwoParticipants(@RequestParam("username") String username, Principal principal){
         if(username.equals(principal.getName())){
@@ -50,7 +64,30 @@ public class ChatController {
     public ResponseEntity<?> nullUnseenMessages(@RequestParam("chatId") Long chatId, Principal principal){
         try {
             participantServiceImplementation.nullUnseenMessagesForParticipantByLoggedUserAndChatId(principal.getName(), chatId);
-        } catch (FileNotFoundException e) {
+        } catch (ChatNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getLocalizedMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{chatId}/participant/{username}")
+    public ResponseEntity<?> changeParticipantNickname(
+            @PathVariable("chatId") Long chatId,
+            @PathVariable("username") String username,
+            @RequestParam("nickname") String newNickname){
+        try {
+            participantServiceImplementation.changeNicknameOfParticipantByChatIdAndUsername(newNickname, chatId, username);
+        } catch (ChatNotFoundException e) {
+            return ResponseEntity.status(404).body(e.getLocalizedMessage());
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{chatId}/close")
+    public ResponseEntity<?> closeChat(@PathVariable Long chatId, Principal principal){
+        try {
+            participantServiceImplementation.closeChatForSingleUser(chatId, principal.getName());
+        } catch (ChatNotFoundException e) {
             return ResponseEntity.status(404).body(e.getLocalizedMessage());
         }
         return ResponseEntity.ok().build();

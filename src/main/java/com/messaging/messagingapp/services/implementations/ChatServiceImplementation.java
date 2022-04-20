@@ -4,16 +4,15 @@ import com.messaging.messagingapp.data.entities.ChatEntity;
 import com.messaging.messagingapp.data.entities.ChatParticipantEntity;
 import com.messaging.messagingapp.data.entities.UserEntity;
 import com.messaging.messagingapp.data.models.viewModel.ChatListViewModel;
+import com.messaging.messagingapp.data.models.viewModel.ChatParticipantViewModel;
 import com.messaging.messagingapp.data.repositories.ChatRepository;
-import com.messaging.messagingapp.data.repositories.ParticipantRepository;
+import com.messaging.messagingapp.exceptions.ChatNotFoundException;
 import com.messaging.messagingapp.services.ChatService;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,32 +21,29 @@ import java.util.stream.Collectors;
 @Service
 public class ChatServiceImplementation implements ChatService {
     private final ChatRepository chatRepository;
-    private final ParticipantRepository participantRepository;
     private final UserServiceImplementation userServiceImplementation;
     private final ParticipantServiceImplementation participantServiceImplementation;
+    private final MessagingTemplateServiceImplementation templateServiceImplementation;
     private final ModelMapper modelMapper;
-    private final SimpMessagingTemplate messagingTemplate;
 
     public ChatServiceImplementation(ChatRepository chatRepository,
-                                     ParticipantRepository participantRepository,
                                      UserServiceImplementation userServiceImplementation,
                                      ParticipantServiceImplementation participantServiceImplementation,
-                                     ModelMapper modelMapper,
-                                     SimpMessagingTemplate messagingTemplate) {
+                                     MessagingTemplateServiceImplementation templateServiceImplementation,
+                                     ModelMapper modelMapper) {
         this.chatRepository = chatRepository;
-        this.participantRepository = participantRepository;
         this.userServiceImplementation = userServiceImplementation;
         this.participantServiceImplementation = participantServiceImplementation;
+        this.templateServiceImplementation = templateServiceImplementation;
         this.modelMapper = modelMapper;
-        this.messagingTemplate = messagingTemplate;
     }
 
     @Override
-    public ChatEntity returnInnerChatById(Long chatId) throws FileNotFoundException {
+    public ChatEntity returnInnerChatById(Long chatId) throws ChatNotFoundException {
         Optional<ChatEntity> chatOrNull = chatRepository.findById(chatId);
         if(chatOrNull.isPresent())
             return chatOrNull.get();
-        else throw new FileNotFoundException("Chat not found.");
+        else throw new ChatNotFoundException("Chat not found.");
     }
 
 
@@ -62,20 +58,51 @@ public class ChatServiceImplementation implements ChatService {
                 .collect(Collectors.toList());
         for (ChatEntity chat :
                 chats) {
-            ChatListViewModel chatForList = new ChatListViewModel();
-            modelMapper.map(chat, chatForList);
-            chat.getParticipants().forEach(p -> {
-                if(p.getUser() != user){
-                    chatForList.setChatParticipantName(p.getNickname());
-                    chatForList.setChatParticipantImageLink(p.getUser().getProfilePicLink());
-                }
-                else {
-                    chatForList.setUnseenMessages(p.getUnseenMessages());
-                }
-            });
-            listToReturn.add(chatForList);
+            if(!chat.getParticipants()
+                    .stream()
+                    .filter(p -> p.getUser().getUsername().equals(username))
+                    .map(ChatParticipantEntity::getChatClosed)
+                    .findFirst()
+                    .get()){
+                ChatListViewModel chatForList = new ChatListViewModel();
+                modelMapper.map(chat, chatForList);
+                chat.getParticipants().forEach(p -> {
+                    if(p.getUser() != user){
+                        chatForList.setChatParticipantName(p.getNickname());
+                        chatForList.setChatParticipantImageLink(p.getUser().getProfilePicLink());
+                    }
+                    else {
+                        chatForList.setUnseenMessages(p.getUnseenMessages());
+                    }
+                });
+                listToReturn.add(chatForList);
+            }
         }
         return listToReturn;
+    }
+
+    @Override
+    public List<ChatParticipantViewModel> returnParticipantsOfChat(Long chatId, String loggedUserUsername)
+            throws IllegalAccessException,
+            ChatNotFoundException {
+        if(doesUserParticipateInChat(loggedUserUsername, chatId)){
+            List<ChatParticipantViewModel> participantsToReturn = new ArrayList<>();
+            Optional<List<ChatParticipantEntity>> participantsOrNull = chatRepository.returnParticipantsOfChat(chatId);
+            if(participantsOrNull.isPresent()) {
+                for (ChatParticipantEntity participant :
+                        participantsOrNull.get()) {
+                    ChatParticipantViewModel mappedParticipant = new ChatParticipantViewModel();
+                    modelMapper.map(participant, mappedParticipant);
+                    mappedParticipant.setUsername(participant.getUser().getUsername());
+                    mappedParticipant.setPublicName(participant.getUser().getPublicName());
+                    mappedParticipant.setProfilePicLink(participant.getUser().getProfilePicLink());
+                    participantsToReturn.add(mappedParticipant);
+                }
+                return participantsToReturn;
+            }
+            throw new ChatNotFoundException("This chat doesn't exist.");
+        }
+        throw new IllegalAccessException();
     }
 
     @Override
@@ -85,8 +112,8 @@ public class ChatServiceImplementation implements ChatService {
             chatRepository.save(chat);
             participantServiceImplementation.createAParticipant(loggedUserUsername, chat);
             participantServiceImplementation.createAParticipant(otherUserUsername, chat);
-            messagingTemplate.convertAndSend("/queue/chat-list/" + loggedUserUsername, chat.getId());
-            messagingTemplate.convertAndSend("/queue/chat-list/" + otherUserUsername, chat.getId());
+            templateServiceImplementation.sendChatToUser(loggedUserUsername, chat.getId());
+            templateServiceImplementation.sendChatToUser(otherUserUsername, chat.getId());
             return chat;
         }
         else throw new DuplicateKeyException("You already have a chat with this user!");
@@ -96,8 +123,8 @@ public class ChatServiceImplementation implements ChatService {
     @Transactional
     public Boolean doesUserParticipateInChat(String username, Long chatId) {
         UserEntity user = userServiceImplementation.returnUserByUsername(username);
-        List<Long> test = user.getParticipants().stream().map(p -> p.getChat().getId()).collect(Collectors.toList());
-        if(test.contains(chatId)){
+        List<Long> chatIds = user.getParticipants().stream().map(p -> p.getChat().getId()).collect(Collectors.toList());
+        if(chatIds.contains(chatId)){
             return true;
         }
         return false;
@@ -117,13 +144,8 @@ public class ChatServiceImplementation implements ChatService {
         return false;
     }
 
-    @Override
-    public void increaseUnseenMessagesForAllParticipantsOfAChat(Long chatId) {
-        List<ChatParticipantEntity> participantsOfChat = chatRepository.returnParticipantsOfChat(chatId);
-        for (ChatParticipantEntity participant :
-                participantsOfChat) {
-            participant.setUnseenMessages(true);
-            participantRepository.save(participant);
-        }
-    }
+/*    private Boolean isChatClosedForLoggedUser(String username, Long chatId){
+        UserEntity user = userServiceImplementation.returnUserByUsername(username);
+        return user.getParticipants().stream().filter(p -> p.getChat().getId().equals(chatId)).findFirst().get().getChatClosed();
+    }*/
 }

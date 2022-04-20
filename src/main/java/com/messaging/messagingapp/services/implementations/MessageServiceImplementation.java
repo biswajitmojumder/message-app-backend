@@ -8,18 +8,18 @@ import com.messaging.messagingapp.data.models.viewModel.MessageViewModel;
 import com.messaging.messagingapp.data.models.viewModel.ReplyMessageViewModel;
 import com.messaging.messagingapp.data.repositories.MessageRepository;
 import com.messaging.messagingapp.data.repositories.pageableRepositories.PageableMessageRepository;
+import com.messaging.messagingapp.exceptions.ChatNotFoundException;
 import com.messaging.messagingapp.services.MessageService;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class MessageServiceImplementation implements MessageService {
@@ -27,27 +27,27 @@ public class MessageServiceImplementation implements MessageService {
     private final PageableMessageRepository pageableMessageRepository;
     private final ChatServiceImplementation chatServiceImplementation;
     private final ParticipantServiceImplementation participantServiceImplementation;
+    private final MessagingTemplateServiceImplementation templateServiceImplementation;
     private final ModelMapper modelMapper;
-    private final SimpMessagingTemplate messagingTemplate;
 
     public MessageServiceImplementation(MessageRepository messageRepository,
                                         PageableMessageRepository pageableMessageRepository,
                                         ChatServiceImplementation chatServiceImplementation,
                                         ParticipantServiceImplementation participantServiceImplementation,
-                                        ModelMapper modelMapper,
-                                        SimpMessagingTemplate messagingTemplate) {
+                                        MessagingTemplateServiceImplementation templateServiceImplementation,
+                                        ModelMapper modelMapper) {
         this.messageRepository = messageRepository;
         this.pageableMessageRepository = pageableMessageRepository;
         this.chatServiceImplementation = chatServiceImplementation;
         this.participantServiceImplementation = participantServiceImplementation;
+        this.templateServiceImplementation = templateServiceImplementation;
         this.modelMapper = modelMapper;
-        this.messagingTemplate = messagingTemplate;
     }
 
     @Override
     public void sendMessage(MessageBindingModel incomingMessage, String senderUsername)
-            throws FileNotFoundException,
-            IllegalAccessException {
+            throws IllegalAccessException,
+            ChatNotFoundException {
         if(chatServiceImplementation.doesUserParticipateInChat(senderUsername, incomingMessage.getChatId())) {
             MessageEntity message = saveMessage(incomingMessage, senderUsername);
             MessageViewModel messageToSend = new MessageViewModel();
@@ -61,15 +61,14 @@ public class MessageServiceImplementation implements MessageService {
             messageToSend.setChatId(incomingMessage.getChatId());
             messageToSend.setUnseenMessages(participantServiceImplementation
                     .returnParticipantUnseenMessagesByChatIdAndUsername(senderUsername, incomingMessage.getChatId()));
-            messagingTemplate.convertAndSend("/queue/chat/" + incomingMessage.getChatId(), messageToSend);
+            templateServiceImplementation.sendMessageToUser(incomingMessage.getChatId(), messageToSend);
         }
         else throw new IllegalAccessException();
     }
 
     @Override
     public List<MessageViewModel> loadPageableMessagesForChat(Long chatId, String usernameOfLoggedUser, int pageNum)
-            throws IllegalAccessException,
-            FileNotFoundException {
+            throws IllegalAccessException, ChatNotFoundException {
         if(chatServiceImplementation.doesUserParticipateInChat(usernameOfLoggedUser, chatId)){
             Pageable page = PageRequest.of(pageNum, 50);
             List<MessageEntity> messages = pageableMessageRepository.getByChat_IdOrderByCreateTimeDesc(chatId, page);
@@ -88,7 +87,8 @@ public class MessageServiceImplementation implements MessageService {
                 }
                 mappedMessages.add(mappedMessage);
             }
-            participantServiceImplementation.nullUnseenMessagesForParticipantByLoggedUserAndChatId(usernameOfLoggedUser, chatId);
+            participantServiceImplementation
+                    .nullUnseenMessagesForParticipantByLoggedUserAndChatId(usernameOfLoggedUser, chatId);
             return mappedMessages;
         }
         throw new IllegalAccessException();
@@ -110,7 +110,7 @@ public class MessageServiceImplementation implements MessageService {
     }
 
     private MessageEntity saveMessage(MessageBindingModel incomingMessage, String senderUsername)
-            throws FileNotFoundException {
+            throws ChatNotFoundException {
         ChatParticipantEntity sender = participantServiceImplementation
                 .returnParticipantByChatIdAndUsername(senderUsername, incomingMessage.getChatId());
         ChatEntity chat = chatServiceImplementation.returnInnerChatById(incomingMessage.getChatId());
@@ -124,7 +124,18 @@ public class MessageServiceImplementation implements MessageService {
             replyMessageOrNull.ifPresent(newMessage::setReplyingTo);
         }
         messageRepository.save(newMessage);
-        chatServiceImplementation.increaseUnseenMessagesForAllParticipantsOfAChat(incomingMessage.getChatId());
+        participantServiceImplementation.switchUnseenMessagesForAllParticipantsOfAChat(incomingMessage.getChatId());
+        List<ChatParticipantEntity> participantsWithClosedChat = chat
+                .getParticipants()
+                .stream()
+                .filter(p -> p.getChatClosed() == true)
+                .collect(Collectors.toList());
+        if(participantsWithClosedChat.size() > 0){
+            participantsWithClosedChat.forEach(p -> {
+                participantServiceImplementation.openChatForParticipant(chat.getId(), p);
+                templateServiceImplementation.sendChatToUser(p.getUser().getUsername(), chat.getId());
+            });
+        }
         return newMessage;
     }
 

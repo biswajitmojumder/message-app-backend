@@ -4,10 +4,10 @@ import com.messaging.messagingapp.data.entities.ChatEntity;
 import com.messaging.messagingapp.data.entities.ChatParticipantEntity;
 import com.messaging.messagingapp.data.entities.UserEntity;
 import com.messaging.messagingapp.data.repositories.ParticipantRepository;
+import com.messaging.messagingapp.exceptions.ChatNotFoundException;
 import com.messaging.messagingapp.services.ParticipantService;
 import org.springframework.stereotype.Service;
 
-import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,12 +25,12 @@ public class ParticipantServiceImplementation implements ParticipantService {
 
     @Override
     public ChatParticipantEntity returnParticipantByChatIdAndUsername(String username, Long chatId)
-            throws FileNotFoundException {
+            throws ChatNotFoundException {
         Optional<ChatParticipantEntity> participantOrNull = participantRepository
                 .findByChat_IdAndUser_Username(chatId, username);
         if(participantOrNull.isPresent())
             return participantOrNull.get();
-        throw new FileNotFoundException("Chat not found.");
+        throw new ChatNotFoundException("Chat not found.");
     }
 
     @Override
@@ -61,9 +61,53 @@ public class ParticipantServiceImplementation implements ParticipantService {
 
     @Override
     public void nullUnseenMessagesForParticipantByLoggedUserAndChatId(String loggedUserUsername, Long chatId)
-            throws FileNotFoundException {
+            throws ChatNotFoundException {
         ChatParticipantEntity participant = returnParticipantByChatIdAndUsername(loggedUserUsername, chatId);
         participant.setUnseenMessages(false);
+        participantRepository.save(participant);
+    }
+
+    @Override
+    public void switchUnseenMessagesForAllParticipantsOfAChat(Long chatId) throws ChatNotFoundException {
+        List<ChatParticipantEntity> participantsOfChat = participantRepository.getAllByChat_Id(chatId);
+        if(participantsOfChat.size() > 0) {
+            for (ChatParticipantEntity participant :
+                    participantsOfChat) {
+                participant.setUnseenMessages(true);
+                participantRepository.save(participant);
+            }
+        }
+        else throw new ChatNotFoundException("This chat doesn't exist.");
+    }
+
+    @Override
+    public void changeNicknameOfParticipantByChatIdAndUsername(String newNickname, Long chatId, String username)
+            throws ChatNotFoundException {
+        ChatParticipantEntity participant = returnParticipantByChatIdAndUsername(username, chatId);
+        if (newNickname.isEmpty()){
+            participant.setNickname(participant.getUser().getPublicName());
+        }
+        else participant.setNickname(newNickname);
+        participantRepository.save(participant);
+    }
+
+    @Override
+    public void closeChatForSingleUser(Long chatId, String loggedUserUsername) throws ChatNotFoundException {
+        ChatParticipantEntity participant = returnParticipantByChatIdAndUsername(loggedUserUsername, chatId);
+        participant.setChatClosed(true);
+        participantRepository.save(participant);
+    }
+
+    @Override
+    public void openChatForSingleUser(Long chatId, String loggedUserUsername) throws ChatNotFoundException {
+        ChatParticipantEntity participant = returnParticipantByChatIdAndUsername(loggedUserUsername, chatId);
+        participant.setChatClosed(false);
+        participantRepository.save(participant);
+    }
+
+    @Override
+    public void openChatForParticipant(Long chatId, ChatParticipantEntity participant) {
+        participant.setChatClosed(false);
         participantRepository.save(participant);
     }
 }

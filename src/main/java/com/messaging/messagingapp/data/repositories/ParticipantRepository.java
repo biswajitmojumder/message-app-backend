@@ -12,6 +12,7 @@ import java.util.Optional;
 public interface ParticipantRepository extends JpaRepository<ChatParticipantEntity, Long> {
     Optional<ChatParticipantEntity> findByChat_IdAndUser_Username(Long chatId, String username);
     List<ChatParticipantEntity> getAllByUser_Username(String username);
+    List<ChatParticipantEntity> getAllByChat_Id(Long chatId);
     @Query("select p.unseenMessages from ChatParticipantEntity p where p.chat.id = ?1 and p.user.username = ?2")
     Boolean getUnseenMessagesByChatIdAndUsername(Long chatId, String username);
 }

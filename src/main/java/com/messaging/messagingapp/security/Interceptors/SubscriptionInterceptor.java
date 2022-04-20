@@ -1,5 +1,6 @@
 package com.messaging.messagingapp.security.Interceptors;
 
+import com.messaging.messagingapp.exceptions.ChatNotFoundException;
 import com.messaging.messagingapp.services.implementations.ParticipantServiceImplementation;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -9,10 +10,8 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Service;
 
-import java.io.FileNotFoundException;
 import java.security.Principal;
 import java.util.Arrays;
-import java.util.Objects;
 
 @Service
 public class SubscriptionInterceptor implements ChannelInterceptor {
@@ -34,7 +33,7 @@ public class SubscriptionInterceptor implements ChannelInterceptor {
                 Principal user = headerAccessor.getUser();
                 try {
                     participantServiceImplementation.returnParticipantByChatIdAndUsername(user.getName(), chatId);
-                } catch (FileNotFoundException e) {
+                } catch (ChatNotFoundException e) {
                     throw new MessageDeliveryException("You cannot use this chat since you are not a participant in it.");
                 }
                 return ChannelInterceptor.super.preSend(message, channel);

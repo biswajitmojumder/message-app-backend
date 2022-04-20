@@ -10,6 +10,7 @@ import com.messaging.messagingapp.data.repositories.ChatRepository;
 import com.messaging.messagingapp.data.repositories.MessageRepository;
 import com.messaging.messagingapp.data.repositories.RoleRepository;
 import com.messaging.messagingapp.data.repositories.UserRepository;
+import com.messaging.messagingapp.exceptions.ChatNotFoundException;
 import com.messaging.messagingapp.services.implementations.ChatServiceImplementation;
 import com.messaging.messagingapp.services.implementations.MessageServiceImplementation;
 import com.messaging.messagingapp.services.implementations.UserServiceImplementation;
@@ -103,7 +104,7 @@ public class DataInit implements CommandLineRunner {
         else
             chat = chatRepository.getById(1L);
     }
-    private void messageInit() throws FileNotFoundException, IllegalAccessException {
+    private void messageInit() throws FileNotFoundException, IllegalAccessException, ChatNotFoundException {
         if(messageRepository.count() == 0){
             for (int i = 0; i <= 420; i++){
                 MessageBindingModel firstMessage = new MessageBindingModel();

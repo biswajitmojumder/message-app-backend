@@ -2,6 +2,7 @@ package com.messaging.messagingapp.web;
 
 import com.messaging.messagingapp.data.models.bindingModel.MessageBindingModel;
 import com.messaging.messagingapp.data.models.viewModel.MessageViewModel;
+import com.messaging.messagingapp.exceptions.ChatNotFoundException;
 import com.messaging.messagingapp.services.implementations.MessageServiceImplementation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -26,7 +27,7 @@ public class MessageController {
             messageServiceImplementation.sendMessage(message, principal.getName());
         } catch (IllegalAccessException e) {
             return ResponseEntity.status(403).build();
-        } catch (FileNotFoundException e) {
+        } catch (ChatNotFoundException e) {
             return ResponseEntity.status(404).body(e.getMessage());
         }
         return ResponseEntity.ok().build();
@@ -43,7 +44,7 @@ public class MessageController {
         List<MessageViewModel> messages;
         try {
             messages = messageServiceImplementation.loadPageableMessagesForChat(chatId, principal.getName(), pageNum);
-        } catch (IllegalAccessException | FileNotFoundException e) {
+        } catch (IllegalAccessException | ChatNotFoundException e) {
             return ResponseEntity.status(403).build();
         }
         return ResponseEntity.ok(messages);

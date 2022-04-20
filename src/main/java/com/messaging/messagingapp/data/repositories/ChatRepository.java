@@ -7,9 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ChatRepository extends JpaRepository<ChatEntity, Long> {
     @Query("select c.participants from ChatEntity c where c.id = ?1")
-    List<ChatParticipantEntity> returnParticipantsOfChat(Long chatId);
+    Optional<List<ChatParticipantEntity>> returnParticipantsOfChat(Long chatId);
 }
