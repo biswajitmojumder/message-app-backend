@@ -55,6 +55,8 @@ public class ChatController {
                 chatServiceImplementation.createNewChat(principal.getName(), username);
             } catch (DuplicateKeyException e) {
                 return ResponseEntity.status(409).body(e.getLocalizedMessage());
+            } catch (ChatNotFoundException e) {
+                return ResponseEntity.status(404).body(e.getLocalizedMessage());
             }
             return ResponseEntity.status(201).build();
         }

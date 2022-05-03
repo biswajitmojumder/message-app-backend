@@ -17,7 +17,7 @@ public interface ChatService {
             throws IllegalAccessException,
             NoSuchFieldException,
             ChatNotFoundException;
-    ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername);
+    ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername) throws ChatNotFoundException;
     Boolean doesUserParticipateInChat(String username, Long chatId);
     Boolean doesLoggedUserHaveAChatWithOtherUser(String loggedUserUsername, String otherUserUsername);
 }

@@ -97,7 +97,7 @@ public class DataInit implements CommandLineRunner {
             this.secondUser = userRepository.findByUsername("test").get();
         }
     }
-    private void chatInit(){
+    private void chatInit() throws ChatNotFoundException {
         if(chatRepository.count() == 0){
             chat = chatServiceImplementation.createNewChat(secondUser.getUsername(), firstUser.getUsername());
         }

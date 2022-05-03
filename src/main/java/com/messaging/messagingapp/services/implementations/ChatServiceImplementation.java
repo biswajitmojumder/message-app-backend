@@ -106,7 +106,7 @@ public class ChatServiceImplementation implements ChatService {
     }
 
     @Override
-    public ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername) throws DuplicateKeyException{
+    public ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername) throws DuplicateKeyException, ChatNotFoundException {
         if(!doesLoggedUserHaveAChatWithOtherUser(loggedUserUsername, otherUserUsername)) {
             ChatEntity chat = new ChatEntity();
             chatRepository.save(chat);
@@ -116,7 +116,24 @@ public class ChatServiceImplementation implements ChatService {
             templateServiceImplementation.sendChatToUser(otherUserUsername, chat.getId());
             return chat;
         }
-        else throw new DuplicateKeyException("You already have a chat with this user!");
+        else {
+            Long chatId = 0L;
+            for (ChatEntity chat :
+                    participantServiceImplementation.returnListOfChatsOfUser(loggedUserUsername)) {
+                for (ChatParticipantEntity participant:
+                        chat.getParticipants()) {
+                    if (participant.getUser().getUsername().equals(otherUserUsername)){
+                        chatId = participant.getChat().getId();
+                    }
+                }
+            }
+            if(isChatClosedForLoggedUser(loggedUserUsername, chatId)){
+                participantServiceImplementation.openChatForSingleUser(chatId, loggedUserUsername);
+                templateServiceImplementation.sendChatToUser(loggedUserUsername, chatId);
+                return returnInnerChatById(chatId);
+            }
+            else throw new DuplicateKeyException("You already have a chat with this user!");
+        }
     }
 
     @Override
@@ -144,8 +161,13 @@ public class ChatServiceImplementation implements ChatService {
         return false;
     }
 
-/*    private Boolean isChatClosedForLoggedUser(String username, Long chatId){
-        UserEntity user = userServiceImplementation.returnUserByUsername(username);
-        return user.getParticipants().stream().filter(p -> p.getChat().getId().equals(chatId)).findFirst().get().getChatClosed();
-    }*/
+    private Boolean isChatClosedForLoggedUser(String loggedUserUsername, Long chatId) throws ChatNotFoundException {
+        ChatParticipantEntity chat = returnInnerChatById(chatId)
+                .getParticipants()
+                .stream()
+                .filter(p -> p.getUser().getUsername().equals(loggedUserUsername))
+                .findFirst()
+                .get();
+        return chat.getChatClosed();
+    }
 }
