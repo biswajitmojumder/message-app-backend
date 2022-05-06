@@ -9,6 +9,7 @@ import com.messaging.messagingapp.data.models.viewModel.ReplyMessageViewModel;
 import com.messaging.messagingapp.data.repositories.MessageRepository;
 import com.messaging.messagingapp.data.repositories.pageableRepositories.PageableMessageRepository;
 import com.messaging.messagingapp.exceptions.ChatNotFoundException;
+import com.messaging.messagingapp.exceptions.UserNotFoundException;
 import com.messaging.messagingapp.services.MessageService;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.PageRequest;
@@ -46,8 +47,7 @@ public class MessageServiceImplementation implements MessageService {
 
     @Override
     public void sendMessage(MessageBindingModel incomingMessage, String senderUsername)
-            throws IllegalAccessException,
-            ChatNotFoundException {
+            throws IllegalAccessException, ChatNotFoundException, UserNotFoundException {
         if(chatServiceImplementation.doesUserParticipateInChat(senderUsername, incomingMessage.getChatId())) {
             MessageEntity message = saveMessage(incomingMessage, senderUsername);
             MessageViewModel messageToSend = new MessageViewModel();
@@ -68,7 +68,7 @@ public class MessageServiceImplementation implements MessageService {
 
     @Override
     public List<MessageViewModel> loadPageableMessagesForChat(Long chatId, String usernameOfLoggedUser, int pageNum)
-            throws IllegalAccessException, ChatNotFoundException {
+            throws IllegalAccessException, ChatNotFoundException, UserNotFoundException {
         if(chatServiceImplementation.doesUserParticipateInChat(usernameOfLoggedUser, chatId)){
             Pageable page = PageRequest.of(pageNum, 50);
             List<MessageEntity> messages = pageableMessageRepository.getByChat_IdOrderByCreateTimeDesc(chatId, page);

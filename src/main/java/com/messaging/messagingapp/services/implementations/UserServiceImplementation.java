@@ -5,6 +5,7 @@ import com.messaging.messagingapp.data.models.bindingModel.RegisterUserBindingMo
 import com.messaging.messagingapp.data.models.viewModel.SmallUserInfoViewModel;
 import com.messaging.messagingapp.data.repositories.UserRepository;
 import com.messaging.messagingapp.data.repositories.pageableRepositories.PageableUserRepository;
+import com.messaging.messagingapp.exceptions.UserNotFoundException;
 import com.messaging.messagingapp.services.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +47,7 @@ public class UserServiceImplementation implements UserService {
                 modelMapper.map(newUser, user);
                 user.setPassword(passwordEncoder.encode(newUser.getPassword()));
                 user.setRoles(List.of(roleServiceImplementation.returnUserRole()));
+                user.setProfilePicLink("https://images.nightcafe.studio//assets/profile.png?tr=w-1600,c-at_max");
                 userRepository.save(user);
                 return user;
             }
@@ -55,23 +57,23 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
-    public UserEntity returnUserByUsername(String username) {
+    public UserEntity returnUserByUsername(String username) throws UserNotFoundException {
         Optional<UserEntity> userOrNull = userRepository.findByUsername(username);
         if(userOrNull.isPresent())
             return userOrNull.get();
-        throw new NullPointerException("User not found");
+        throw new UserNotFoundException();
     }
 
     @Override
-    public UserEntity returnUserById(Long id) {
+    public UserEntity returnUserById(Long id) throws UserNotFoundException {
         Optional<UserEntity> userOrNull = userRepository.findById(id);
         if(userOrNull.isPresent())
             return userOrNull.get();
-        throw new NullPointerException("User not found");
+        throw new UserNotFoundException();
     }
 
     @Override
-    public SmallUserInfoViewModel returnSmallInfoOfLoggedUser(String username) {
+    public SmallUserInfoViewModel returnSmallInfoOfLoggedUser(String username) throws UserNotFoundException {
         UserEntity user = returnUserByUsername(username);
         SmallUserInfoViewModel mappedUser = new SmallUserInfoViewModel();
         modelMapper.map(user, mappedUser);
@@ -91,6 +93,33 @@ public class UserServiceImplementation implements UserService {
         }
         return mappedFoundUsers;
     }
+
+    @Override
+    public void changeProfilePictureLinkOfLoggedUser(String username, String newProfilePictureLink)
+            throws UserNotFoundException {
+        UserEntity loggedUser = returnUserByUsername(username);
+        loggedUser.setProfilePicLink(newProfilePictureLink);
+        userRepository.save(loggedUser);
+    }
+
+    @Override
+    public void changePublicNameOfLoggedUser(String username, String newPublicName) throws UserNotFoundException {
+        UserEntity loggedUser = returnUserByUsername(username);
+        loggedUser.setPublicName(newPublicName);
+        userRepository.save(loggedUser);
+    }
+
+    @Override
+    public void changePasswordOfLoggedUser(String username, String oldPassword, String newPassword)
+            throws UserNotFoundException, InvalidParameterException {
+        UserEntity loggedUser = returnUserByUsername(username);
+        if (passwordEncoder.matches(oldPassword, loggedUser.getPassword())){
+            loggedUser.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(loggedUser);
+        }
+        else throw new InvalidParameterException("Wrong password");
+    }
+
 
     private boolean isUsernameTaken(String username){
         return userRepository.findByUsername(username).isPresent();

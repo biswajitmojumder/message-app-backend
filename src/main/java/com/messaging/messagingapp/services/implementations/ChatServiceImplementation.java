@@ -7,6 +7,7 @@ import com.messaging.messagingapp.data.models.viewModel.ChatListViewModel;
 import com.messaging.messagingapp.data.models.viewModel.ChatParticipantViewModel;
 import com.messaging.messagingapp.data.repositories.ChatRepository;
 import com.messaging.messagingapp.exceptions.ChatNotFoundException;
+import com.messaging.messagingapp.exceptions.UserNotFoundException;
 import com.messaging.messagingapp.services.ChatService;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DuplicateKeyException;
@@ -43,12 +44,12 @@ public class ChatServiceImplementation implements ChatService {
         Optional<ChatEntity> chatOrNull = chatRepository.findById(chatId);
         if(chatOrNull.isPresent())
             return chatOrNull.get();
-        else throw new ChatNotFoundException("Chat not found.");
+        else throw new ChatNotFoundException();
     }
 
 
     @Override
-    public List<ChatListViewModel> loadChatListOfLoggedUser(String username) {
+    public List<ChatListViewModel> loadChatListOfLoggedUser(String username) throws UserNotFoundException {
         UserEntity user = userServiceImplementation.returnUserByUsername(username);
         List<ChatListViewModel> listToReturn = new ArrayList<>();
         List<ChatEntity> chats = user
@@ -84,7 +85,7 @@ public class ChatServiceImplementation implements ChatService {
     @Override
     public List<ChatParticipantViewModel> returnParticipantsOfChat(Long chatId, String loggedUserUsername)
             throws IllegalAccessException,
-            ChatNotFoundException {
+            ChatNotFoundException, UserNotFoundException {
         if(doesUserParticipateInChat(loggedUserUsername, chatId)){
             List<ChatParticipantViewModel> participantsToReturn = new ArrayList<>();
             Optional<List<ChatParticipantEntity>> participantsOrNull = chatRepository.returnParticipantsOfChat(chatId);
@@ -100,13 +101,14 @@ public class ChatServiceImplementation implements ChatService {
                 }
                 return participantsToReturn;
             }
-            throw new ChatNotFoundException("This chat doesn't exist.");
+            throw new ChatNotFoundException();
         }
         throw new IllegalAccessException();
     }
 
     @Override
-    public ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername) throws DuplicateKeyException, ChatNotFoundException {
+    public ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername)
+            throws DuplicateKeyException, ChatNotFoundException, UserNotFoundException {
         if(!doesLoggedUserHaveAChatWithOtherUser(loggedUserUsername, otherUserUsername)) {
             ChatEntity chat = new ChatEntity();
             chatRepository.save(chat);
@@ -138,7 +140,7 @@ public class ChatServiceImplementation implements ChatService {
 
     @Override
     @Transactional
-    public Boolean doesUserParticipateInChat(String username, Long chatId) {
+    public Boolean doesUserParticipateInChat(String username, Long chatId) throws UserNotFoundException {
         UserEntity user = userServiceImplementation.returnUserByUsername(username);
         List<Long> chatIds = user.getParticipants().stream().map(p -> p.getChat().getId()).collect(Collectors.toList());
         if(chatIds.contains(chatId)){

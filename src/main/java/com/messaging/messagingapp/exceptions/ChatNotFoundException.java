@@ -4,7 +4,7 @@ import lombok.experimental.StandardException;
 
 @StandardException
 public class ChatNotFoundException extends Exception{
-    public ChatNotFoundException(String message) {
-        super(message);
+    public ChatNotFoundException() {
+        super("Chat not found.");
     }
 }

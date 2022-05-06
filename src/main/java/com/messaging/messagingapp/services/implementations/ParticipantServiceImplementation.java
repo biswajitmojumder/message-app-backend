@@ -5,6 +5,7 @@ import com.messaging.messagingapp.data.entities.ChatParticipantEntity;
 import com.messaging.messagingapp.data.entities.UserEntity;
 import com.messaging.messagingapp.data.repositories.ParticipantRepository;
 import com.messaging.messagingapp.exceptions.ChatNotFoundException;
+import com.messaging.messagingapp.exceptions.UserNotFoundException;
 import com.messaging.messagingapp.services.ParticipantService;
 import org.springframework.stereotype.Service;
 
@@ -30,7 +31,7 @@ public class ParticipantServiceImplementation implements ParticipantService {
                 .findByChat_IdAndUser_Username(chatId, username);
         if(participantOrNull.isPresent())
             return participantOrNull.get();
-        throw new ChatNotFoundException("Chat not found.");
+        throw new ChatNotFoundException();
     }
 
     @Override
@@ -39,7 +40,8 @@ public class ParticipantServiceImplementation implements ParticipantService {
     }
 
     @Override
-    public ChatParticipantEntity createAParticipant(String usernameOfUser, ChatEntity chat) {
+    public ChatParticipantEntity createAParticipant(String usernameOfUser, ChatEntity chat)
+            throws UserNotFoundException {
         UserEntity user = userServiceImplementation.returnUserByUsername(usernameOfUser);
         ChatParticipantEntity newParticipant = new ChatParticipantEntity();
         newParticipant.setUser(user);
@@ -77,7 +79,7 @@ public class ParticipantServiceImplementation implements ParticipantService {
                 participantRepository.save(participant);
             }
         }
-        else throw new ChatNotFoundException("This chat doesn't exist.");
+        else throw new ChatNotFoundException();
     }
 
     @Override

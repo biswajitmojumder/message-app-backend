@@ -11,6 +11,7 @@ import com.messaging.messagingapp.data.repositories.MessageRepository;
 import com.messaging.messagingapp.data.repositories.RoleRepository;
 import com.messaging.messagingapp.data.repositories.UserRepository;
 import com.messaging.messagingapp.exceptions.ChatNotFoundException;
+import com.messaging.messagingapp.exceptions.UserNotFoundException;
 import com.messaging.messagingapp.services.implementations.ChatServiceImplementation;
 import com.messaging.messagingapp.services.implementations.MessageServiceImplementation;
 import com.messaging.messagingapp.services.implementations.UserServiceImplementation;
@@ -97,14 +98,14 @@ public class DataInit implements CommandLineRunner {
             this.secondUser = userRepository.findByUsername("test").get();
         }
     }
-    private void chatInit() throws ChatNotFoundException {
+    private void chatInit() throws ChatNotFoundException, UserNotFoundException {
         if(chatRepository.count() == 0){
             chat = chatServiceImplementation.createNewChat(secondUser.getUsername(), firstUser.getUsername());
         }
         else
             chat = chatRepository.getById(1L);
     }
-    private void messageInit() throws FileNotFoundException, IllegalAccessException, ChatNotFoundException {
+    private void messageInit() throws IllegalAccessException, ChatNotFoundException, UserNotFoundException {
         if(messageRepository.count() == 0){
             for (int i = 0; i <= 420; i++){
                 MessageBindingModel firstMessage = new MessageBindingModel();
