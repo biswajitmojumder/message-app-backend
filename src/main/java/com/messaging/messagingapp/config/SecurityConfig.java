@@ -49,9 +49,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers(HttpMethod.POST, "/register").anonymous()
-                .and()
-                .authorizeRequests().anyRequest().authenticated()
+                //.antMatchers(HttpMethod.POST, "/register").anonymous()
+                .antMatchers("/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
                 .and()
                 .formLogin()
                 .usernameParameter(UsernamePasswordAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY)
@@ -70,7 +70,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(loginHandler)
+        auth
+                .userDetailsService(loginHandler)
                 .passwordEncoder(passwordEncoder);
     }
 

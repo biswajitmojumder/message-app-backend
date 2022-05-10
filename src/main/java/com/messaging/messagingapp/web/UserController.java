@@ -24,7 +24,7 @@ public class UserController {
         this.userServiceImplementation = userServiceImplementation;
     }
 
-    @PostMapping("/register")
+/*    @PostMapping("/register")
     public ResponseEntity<String> registerUser(RegisterUserBindingModel newUserModel){
         if(!newUserModel.getUsername().trim().isEmpty() &&
                 !newUserModel.getEmail().trim().isEmpty() &&
@@ -39,7 +39,7 @@ public class UserController {
             return ResponseEntity.status(201).build();
         }
         return ResponseEntity.badRequest().body("Empty parameters not allowed");
-    }
+    }*/
 
     @GetMapping("/is-logged-in")
     public ResponseEntity<?> isCurrentSessionValid(HttpServletRequest request){

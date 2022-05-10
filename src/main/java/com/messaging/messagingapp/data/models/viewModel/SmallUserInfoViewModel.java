@@ -9,4 +9,5 @@ public class SmallUserInfoViewModel {
     private String publicName;
     private String username;
     private String profilePicLink;
+    private boolean isAdmin;
 }

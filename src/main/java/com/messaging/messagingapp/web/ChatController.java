@@ -55,7 +55,7 @@ public class ChatController {
 
     @PostMapping("/create")
     public ResponseEntity<?> createChatWithTwoParticipants(@RequestParam("username") String username, Principal principal){
-        if(username.trim().length() > 3)
+        if(username.trim().length() < 3)
             return ResponseEntity.badRequest().body("Field cannot be empty");
         else if(username.equals(principal.getName()))
             return ResponseEntity.status(409).body("You can't make a chat with yourself.");
@@ -88,7 +88,7 @@ public class ChatController {
             @PathVariable("chatId") Long chatId,
             @PathVariable("username") String username,
             @RequestParam("nickname") String newNickname){
-        if(chatId == null || username.trim().length() > 3)
+        if(chatId == null || username.trim().length() < 3)
             return ResponseEntity.badRequest().body("Field cannot be empty");
         try {
             participantServiceImplementation.changeNicknameOfParticipantByChatIdAndUsername(newNickname, chatId, username);

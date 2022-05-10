@@ -18,4 +18,9 @@ public class RoleServiceImplementation implements RoleService {
     public RoleEntity returnUserRole() {
         return roleRepository.findByRoleName(RoleEnum.USER).get();
     }
+
+    @Override
+    public RoleEntity returnAdminRole() {
+        return roleRepository.findByRoleName(RoleEnum.ADMIN).get();
+    }
 }

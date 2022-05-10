@@ -4,4 +4,5 @@ import com.messaging.messagingapp.data.entities.RoleEntity;
 
 public interface RoleService {
     RoleEntity returnUserRole();
+    RoleEntity returnAdminRole();
 }

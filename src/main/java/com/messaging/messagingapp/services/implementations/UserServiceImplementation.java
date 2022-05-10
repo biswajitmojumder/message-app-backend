@@ -1,6 +1,8 @@
 package com.messaging.messagingapp.services.implementations;
 
+import com.messaging.messagingapp.data.entities.RoleEntity;
 import com.messaging.messagingapp.data.entities.UserEntity;
+import com.messaging.messagingapp.data.enums.RoleEnum;
 import com.messaging.messagingapp.data.models.bindingModel.RegisterUserBindingModel;
 import com.messaging.messagingapp.data.models.viewModel.SmallUserInfoViewModel;
 import com.messaging.messagingapp.data.repositories.UserRepository;
@@ -47,6 +49,10 @@ public class UserServiceImplementation implements UserService {
                 modelMapper.map(newUser, user);
                 user.setPassword(passwordEncoder.encode(newUser.getPassword()));
                 user.setRoles(List.of(roleServiceImplementation.returnUserRole()));
+                if(userRepository.count() == 0)
+                    user.setRoles(List.of(
+                            roleServiceImplementation.returnUserRole(),
+                            roleServiceImplementation.returnAdminRole()));
                 user.setProfilePicLink("https://images.nightcafe.studio//assets/profile.png?tr=w-1600,c-at_max");
                 userRepository.save(user);
                 return user;
@@ -77,6 +83,9 @@ public class UserServiceImplementation implements UserService {
         UserEntity user = returnUserByUsername(username);
         SmallUserInfoViewModel mappedUser = new SmallUserInfoViewModel();
         modelMapper.map(user, mappedUser);
+        if(user.getRoles().stream().map(RoleEntity::getRoleName).anyMatch(r -> r == RoleEnum.ADMIN)){
+            mappedUser.setAdmin(true);
+        }
         return mappedUser;
     }
 
@@ -119,8 +128,6 @@ public class UserServiceImplementation implements UserService {
         }
         else throw new InvalidParameterException("Wrong password");
     }
-
-
     private boolean isUsernameTaken(String username){
         return userRepository.findByUsername(username).isPresent();
     }

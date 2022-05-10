@@ -16,13 +16,15 @@ public class RegisterUserBindingModel {
     @NotBlank
     private String password;
     @NotBlank
+    private String confirmPassword;
+    @NotBlank
     //@Pattern()
     private String email;
     @NotBlank
     private String publicName;
 
     public RegisterUserBindingModel(){}
-    public RegisterUserBindingModel(String username, String password, String email, String publicName){
+    public RegisterUserBindingModel(String username, String password, String confirmPassword, String email, String publicName){
         setUsername(username);
         setPassword(password);
         setEmail(email);
