@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Found Users</title>
+    <style>
+        body{
+            background-color: rgba(94,97,99,0.83);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .user{
+            background-color: white;
+            width: 500px;
+            height: 150px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            border: 1px solid black;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .user-profile-picture{
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 100px;
+            margin-right: 50px;
+        }
+        a{
+            color: black;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-list">
+        <a class="user" th:each="user: ${users}" th:href="@{/admin/expand(id=${user.getId()})}">
+            <img th:src="${user.getProfilePicLink()}" alt="" class="user-profile-picture">
+            <div class="user-info-container">
+                <p class="user-username" th:utext="'Username: ' + ${user.getUsername()}" ></p>
+                <p class="user-public-name" th:utext="'Public Name: ' + ${user.getPublicName()}"></p>
+                <p class="user-id" th:utext="'User Id: ' + ${user.getId()}"></p>
+            </div>
+        </a>
+    </div>
+</body>
+</html>

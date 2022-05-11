@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Management</title>
+    <style>
+        a{
+            border: 1px solid black;
+            text-align: center;
+            margin: 5px 0px;
+            background-color: white;
+            padding: 5px;
+            text-decoration: none;
+            color: black;
+        }
+        a:hover{
+            background-color: rgba(171,180,182,0.83);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body style="background-color: rgba(94,97,99,0.83)">
+    <div class="search-container" style="height: 90vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <form action="#" th:action="@{/admin/search}" method="post"
+              style=
+                      "display: flex;
+                      flex-direction: column;
+                      width: 30%;
+                      border: 2px solid black;
+                      padding: 20px;
+                      background-color: white;">
+            <input type="text" name="searchValue" placeholder="Search term" required>
+            <p>Search type:</p>
+            <div class="usernameSearchTypeWrapper">
+                <input type="radio" id="searchTypeUsername" name="searchType" value="username" required>
+                <label for="searchTypeUsername">Username</label>
+            </div>
+            <div class="idSearchTypeWrapper">
+                <input type="radio" id="searchTypeId" name="searchType" value="id" required>
+                <label for="searchTypeId">Id</label>
+            </div>
+            <button type="submit">Submit</button>
+            <div class="errors" th:if="${errors.size() > 0}" style="display: flex; flex-direction: column; color: red;">
+                <p th:each="error: ${errors}" th:utext="${error}"></p>
+            </div>
+        </form>
+        <a th:href="@{/admin/panel}">Go to panel</a>
+    </div>
+</body>
+</html>

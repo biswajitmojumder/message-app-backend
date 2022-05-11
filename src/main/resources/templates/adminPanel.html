@@ -3,8 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin Panel</title>
+    <style>
+        a{
+            border: 1px solid black;
+            text-align: center;
+            margin: 5px 0px;
+            background-color: white;
+            text-decoration: none;
+            color: black;
+        }
+        a:hover{
+            background-color: rgba(171,180,182,0.83);
+            cursor: pointer;
+        }
+    </style>
 </head>
-<body>
-    <a th:href="@{/admin/register}">Register a new user</a>
+<body style="display: flex; justify-content: center; align-items: center; height: 90vh; background-color: rgba(94,97,99,0.83)">
+    <div class="options-container" style="width: 200px; display: flex; flex-direction: column; border: 2px solid black; padding: 20px; background-color: white;">
+        <a th:href="@{/admin/register}">Register a new user</a>
+        <a th:href="@{/admin/user-management}">Manage users</a>
+    </div>
 </body>
 </html>

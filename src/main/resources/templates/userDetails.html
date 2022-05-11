@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:utext="${user.getPublicName()}"></title>
+    <style>
+        body{
+            background-color: rgba(94,97,99,0.83);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 90vh;
+        }
+        a{
+            border: 1px solid black;
+            text-align: center;
+            margin: 5px 0px;
+            background-color: white;
+            padding: 5px;
+            text-decoration: none;
+            color: black;
+        }
+        a:hover{
+            background-color: rgba(171,180,182,0.83);
+            cursor: pointer;
+        }
+        .user-info-wrapper{
+            background-color: white;
+            padding: 20px;
+            border: 2px solid black;
+            width: fit-content;
+        }
+        .user-profile-picture{
+            height: 200px;
+            width: 200px;
+            object-fit: cover;
+            border-radius: 100px;
+        }
+        .role{
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-info-wrapper">
+        <img class="user-profile-picture" th:src="${user.getProfilePicLink()}">
+        <p class="user-id" th:utext="'User Id: ' + ${user.getId()}"></p>
+        <p class="username" th:utext="'Username: ' + ${user.getUsername()}"></p>
+        <p class="public-name" th:utext="'Public name: ' + ${user.getPublicName()}"></p>
+        <p class="roles-list">Roles: </p>
+        <p class="role" th:each="role: ${user.getRoles()}" th:utext="${role.getRoleName()}"></p>
+    </div>
+    <a th:href="@{/admin/panel}">Go to panel</a>
+    <a th:href="@{/admin/user-management}">Go to search</a>
+</body>
+</html>
