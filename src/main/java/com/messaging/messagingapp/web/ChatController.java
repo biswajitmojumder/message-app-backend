@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/chat")
@@ -40,8 +41,6 @@ public class ChatController {
 
     @GetMapping("/{chatId}/participant/all")
     public ResponseEntity<?> returnParticipantsListOfChat(@PathVariable Long chatId, Principal principal){
-        if (chatId == null)
-            return ResponseEntity.badRequest().body("Field cannot be empty");
         List<ChatParticipantViewModel> participants;
         try {
             participants = chatServiceImplementation.returnParticipantsOfChat(chatId, principal.getName());
@@ -54,14 +53,14 @@ public class ChatController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createChatWithTwoParticipants(@RequestParam("username") String username, Principal principal){
-        if(username.trim().length() < 3)
+    public ResponseEntity<?> createChatWithTwoParticipants(@RequestParam("username") Optional<String> username, Principal principal){
+        if(username.isEmpty() || username.get().trim().length() < 3)
             return ResponseEntity.badRequest().body("Field cannot be empty");
-        else if(username.equals(principal.getName()))
+        else if(username.get().equals(principal.getName()))
             return ResponseEntity.status(409).body("You can't make a chat with yourself.");
         else {
             try {
-                chatServiceImplementation.createNewChat(principal.getName(), username);
+                chatServiceImplementation.createNewChat(principal.getName(), username.get());
             } catch (DuplicateKeyException e) {
                 return ResponseEntity.status(409).body(e.getLocalizedMessage());
             } catch (ChatNotFoundException | UserNotFoundException e) {
@@ -72,11 +71,12 @@ public class ChatController {
     }
 
     @PatchMapping("/null-unseen-messages")
-    public ResponseEntity<?> nullUnseenMessages(@RequestParam("chatId") Long chatId, Principal principal){
-        if(chatId == null)
+    public ResponseEntity<?> nullUnseenMessages(@RequestParam("chatId") Optional<Long> chatId, Principal principal){
+        if(chatId.isEmpty() || chatId.get() == null)
             return ResponseEntity.badRequest().body("Field cannot be empty");
         try {
-            participantServiceImplementation.nullUnseenMessagesForParticipantByLoggedUserAndChatId(principal.getName(), chatId);
+            participantServiceImplementation
+                    .nullUnseenMessagesForParticipantByLoggedUserAndChatId(principal.getName(), chatId.get());
         } catch (ChatNotFoundException e) {
             return ResponseEntity.status(404).body(e.getLocalizedMessage());
         }
@@ -87,11 +87,14 @@ public class ChatController {
     public ResponseEntity<?> changeParticipantNickname(
             @PathVariable("chatId") Long chatId,
             @PathVariable("username") String username,
-            @RequestParam("nickname") String newNickname){
-        if(chatId == null || username.trim().length() < 3)
-            return ResponseEntity.badRequest().body("Field cannot be empty");
+            @RequestParam("nickname") Optional<String> newNickname){
+        if(newNickname.isEmpty()){
+            return ResponseEntity.badRequest().body("Missing new nickname parameter");
+        }
+        if(username.trim().length() < 3)
+            return ResponseEntity.badRequest().body("Username cannot be less than 3 letters long");
         try {
-            participantServiceImplementation.changeNicknameOfParticipantByChatIdAndUsername(newNickname, chatId, username);
+            participantServiceImplementation.changeNicknameOfParticipantByChatIdAndUsername(newNickname.get(), chatId, username);
         } catch (ChatNotFoundException e) {
             return ResponseEntity.status(404).body(e.getLocalizedMessage());
         }
@@ -100,8 +103,6 @@ public class ChatController {
 
     @PatchMapping("/{chatId}/close")
     public ResponseEntity<?> closeChat(@PathVariable Long chatId, Principal principal){
-        if(chatId == null)
-            return ResponseEntity.badRequest().body("Field cannot be empty");
         try {
             participantServiceImplementation.closeChatForSingleUser(chatId, principal.getName());
         } catch (ChatNotFoundException e) {

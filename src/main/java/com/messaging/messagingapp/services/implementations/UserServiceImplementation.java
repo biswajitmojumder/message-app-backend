@@ -48,11 +48,12 @@ public class UserServiceImplementation implements UserService {
                 UserEntity user = new UserEntity();
                 modelMapper.map(newUser, user);
                 user.setPassword(passwordEncoder.encode(newUser.getPassword()));
-                user.setRoles(List.of(roleServiceImplementation.returnUserRole()));
                 if(userRepository.count() == 0)
                     user.setRoles(List.of(
                             roleServiceImplementation.returnUserRole(),
                             roleServiceImplementation.returnAdminRole()));
+                else
+                    user.setRoles(List.of(roleServiceImplementation.returnUserRole()));
                 user.setProfilePicLink("https://images.nightcafe.studio//assets/profile.png?tr=w-1600,c-at_max");
                 userRepository.save(user);
                 return user;
@@ -101,6 +102,11 @@ public class UserServiceImplementation implements UserService {
             mappedFoundUsers.add(mappedUser);
         }
         return mappedFoundUsers;
+    }
+
+    @Override
+    public boolean doesUserByUsernameExist(String username) {
+        return userRepository.findByUsername(username).isPresent();
     }
 
     @Override

@@ -13,6 +13,7 @@ public interface UserService {
     UserEntity returnUserById(Long id) throws UserNotFoundException;
     SmallUserInfoViewModel returnSmallInfoOfLoggedUser(String username) throws UserNotFoundException;
     List<SmallUserInfoViewModel> searchUsersByUsername(String username, int pageNum);
+    boolean doesUserByUsernameExist(String username);
     void changeProfilePictureLinkOfLoggedUser(String username, String newProfilePictureLink) throws UserNotFoundException;
     void changePublicNameOfLoggedUser(String username, String newPublicName) throws UserNotFoundException;
     void changePasswordOfLoggedUser(String username, String oldPassword, String newPassword) throws UserNotFoundException;

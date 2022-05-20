@@ -16,11 +16,14 @@ import com.messaging.messagingapp.services.implementations.ChatServiceImplementa
 import com.messaging.messagingapp.services.implementations.MessageServiceImplementation;
 import com.messaging.messagingapp.services.implementations.UserServiceImplementation;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.FileNotFoundException;
 
 @Component
+@Profile("!test")
 public class DataInit implements CommandLineRunner {
     private final UserServiceImplementation userServiceImplementation;
     private final ChatServiceImplementation chatServiceImplementation;

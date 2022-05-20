@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -86,12 +87,15 @@ public class ChatServiceImplementation implements ChatService {
     public List<ChatParticipantViewModel> returnParticipantsOfChat(Long chatId, String loggedUserUsername)
             throws IllegalAccessException,
             ChatNotFoundException, UserNotFoundException {
-        if(doesUserParticipateInChat(loggedUserUsername, chatId)){
-            List<ChatParticipantViewModel> participantsToReturn = new ArrayList<>();
-            Optional<List<ChatParticipantEntity>> participantsOrNull = chatRepository.returnParticipantsOfChat(chatId);
-            if(participantsOrNull.isPresent()) {
+        List<ChatParticipantEntity> participants = chatRepository.returnParticipantsOfChat(chatId).get()
+                .stream()
+                .sorted(Comparator.comparing(a -> a.getUser().getUsername()))
+                .collect(Collectors.toList());
+        if (participants.size() == 2) {
+            if (doesUserParticipateInChat(loggedUserUsername, chatId)) {
+                List<ChatParticipantViewModel> participantsToReturn = new ArrayList<>();
                 for (ChatParticipantEntity participant :
-                        participantsOrNull.get()) {
+                        participants) {
                     ChatParticipantViewModel mappedParticipant = new ChatParticipantViewModel();
                     modelMapper.map(participant, mappedParticipant);
                     mappedParticipant.setUsername(participant.getUser().getUsername());
@@ -101,22 +105,25 @@ public class ChatServiceImplementation implements ChatService {
                 }
                 return participantsToReturn;
             }
-            throw new ChatNotFoundException();
+            throw new IllegalAccessException();
         }
-        throw new IllegalAccessException();
+        throw new ChatNotFoundException();
     }
 
     @Override
     public ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername)
             throws DuplicateKeyException, ChatNotFoundException, UserNotFoundException {
         if(!doesLoggedUserHaveAChatWithOtherUser(loggedUserUsername, otherUserUsername)) {
-            ChatEntity chat = new ChatEntity();
-            chatRepository.save(chat);
-            participantServiceImplementation.createAParticipant(loggedUserUsername, chat);
-            participantServiceImplementation.createAParticipant(otherUserUsername, chat);
-            templateServiceImplementation.sendChatToUser(loggedUserUsername, chat.getId());
-            templateServiceImplementation.sendChatToUser(otherUserUsername, chat.getId());
-            return chat;
+            if(userServiceImplementation.doesUserByUsernameExist(otherUserUsername)) {
+                ChatEntity chat = new ChatEntity();
+                chatRepository.save(chat);
+                participantServiceImplementation.createAParticipant(loggedUserUsername, chat);
+                participantServiceImplementation.createAParticipant(otherUserUsername, chat);
+                templateServiceImplementation.sendChatToUser(loggedUserUsername, chat.getId());
+                templateServiceImplementation.sendChatToUser(otherUserUsername, chat.getId());
+                return chat;
+            }
+            throw new UserNotFoundException();
         }
         else {
             Long chatId = 0L;
