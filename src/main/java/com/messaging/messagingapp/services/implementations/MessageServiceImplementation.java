@@ -48,50 +48,60 @@ public class MessageServiceImplementation implements MessageService {
     @Override
     public void sendMessage(MessageBindingModel incomingMessage, String senderUsername)
             throws IllegalAccessException, ChatNotFoundException, UserNotFoundException {
-        if(chatServiceImplementation.doesUserParticipateInChat(senderUsername, incomingMessage.getChatId())) {
-            MessageEntity message = saveMessage(incomingMessage, senderUsername);
-            MessageViewModel messageToSend = new MessageViewModel();
-            modelMapper.map(message, messageToSend);
-            messageToSend.setSenderUsername(senderUsername);
-            if (message.getReplyingTo() != null) {
-                ReplyMessageViewModel reply = new ReplyMessageViewModel();
-                modelMapper.map(message.getReplyingTo(), reply);
-                messageToSend.setReplyTo(reply);
-            }
-            messageToSend.setChatId(incomingMessage.getChatId());
-            messageToSend.setUnseenMessages(participantServiceImplementation
-                    .returnParticipantUnseenMessagesByChatIdAndUsername(senderUsername, incomingMessage.getChatId()));
-            templateServiceImplementation.sendMessageToUser(incomingMessage.getChatId(), messageToSend);
-        }
-        else throw new IllegalAccessException();
+        if(chatServiceImplementation.doesChatExist(incomingMessage.getChatId())) {
+            if (chatServiceImplementation.doesUserParticipateInChat(senderUsername, incomingMessage.getChatId())) {
+                MessageEntity message = saveMessage(incomingMessage, senderUsername);
+                MessageViewModel messageToSend = new MessageViewModel();
+                modelMapper.map(message, messageToSend);
+                messageToSend.setSenderUsername(senderUsername);
+                if (message.getReplyingTo() != null) {
+                    if (messageRepository.count() > incomingMessage.getMessageReplyId()) {
+                        Optional<MessageEntity> messageReply = messageRepository
+                                .findById(incomingMessage.getMessageReplyId());
+                        if (messageReply.isPresent() && messageReply.get().getChat().getId().equals(incomingMessage.getChatId())) {
+                            ReplyMessageViewModel reply = new ReplyMessageViewModel();
+                            modelMapper.map(message.getReplyingTo(), reply);
+                            messageToSend.setReplyTo(reply);
+                        }
+                    }
+                }
+                messageToSend.setChatId(incomingMessage.getChatId());
+                messageToSend.setUnseenMessages(participantServiceImplementation
+                        .returnParticipantUnseenMessagesByChatIdAndUsername(senderUsername, incomingMessage.getChatId()));
+                templateServiceImplementation.sendMessageToUser(incomingMessage.getChatId(), messageToSend);
+            } else throw new IllegalAccessException();
+        } else throw new ChatNotFoundException();
     }
 
     @Override
     public List<MessageViewModel> loadPageableMessagesForChat(Long chatId, String usernameOfLoggedUser, int pageNum)
             throws IllegalAccessException, ChatNotFoundException, UserNotFoundException {
-        if(chatServiceImplementation.doesUserParticipateInChat(usernameOfLoggedUser, chatId)){
-            Pageable page = PageRequest.of(pageNum, 50);
-            List<MessageEntity> messages = pageableMessageRepository.getByChat_IdOrderByCreateTimeDesc(chatId, page);
-            Collections.reverse(messages);
-            List<MessageViewModel> mappedMessages = new ArrayList<>();
-            for (MessageEntity message:
-                    messages) {
-                MessageViewModel mappedMessage = new MessageViewModel();
-                modelMapper.map(message, mappedMessage);
-                mappedMessage.setSenderNickname(message.getSender().getNickname());
-                mappedMessage.setSenderUsername(message.getSender().getUser().getUsername());
-                if(message.getReplyingTo() != null){
-                    ReplyMessageViewModel reply = new ReplyMessageViewModel();
-                    modelMapper.map(message.getReplyingTo(), reply);
-                    mappedMessage.setReplyTo(reply);
+        if(chatServiceImplementation.doesChatExist(chatId)) {
+            if (chatServiceImplementation.doesUserParticipateInChat(usernameOfLoggedUser, chatId)) {
+                Pageable page = PageRequest.of(pageNum, 50);
+                List<MessageEntity> messages = pageableMessageRepository.getByChat_IdOrderByCreateTimeDesc(chatId, page);
+                Collections.reverse(messages);
+                List<MessageViewModel> mappedMessages = new ArrayList<>();
+                for (MessageEntity message :
+                        messages) {
+                    MessageViewModel mappedMessage = new MessageViewModel();
+                    modelMapper.map(message, mappedMessage);
+                    mappedMessage.setSenderNickname(message.getSender().getNickname());
+                    mappedMessage.setSenderUsername(message.getSender().getUser().getUsername());
+                    if (message.getReplyingTo() != null) {
+                        ReplyMessageViewModel reply = new ReplyMessageViewModel();
+                        modelMapper.map(message.getReplyingTo(), reply);
+                        mappedMessage.setReplyTo(reply);
+                    }
+                    mappedMessages.add(mappedMessage);
                 }
-                mappedMessages.add(mappedMessage);
+                participantServiceImplementation
+                        .nullUnseenMessagesForParticipantByLoggedUserAndChatId(usernameOfLoggedUser, chatId);
+                return mappedMessages;
             }
-            participantServiceImplementation
-                    .nullUnseenMessagesForParticipantByLoggedUserAndChatId(usernameOfLoggedUser, chatId);
-            return mappedMessages;
+            throw new IllegalAccessException();
         }
-        throw new IllegalAccessException();
+        throw new ChatNotFoundException();
     }
 
     @Override
@@ -106,7 +116,7 @@ public class MessageServiceImplementation implements MessageService {
             }
             else throw new IllegalAccessException();
         }
-        else throw new NoSuchFieldException("Message not found");
+        else throw new NoSuchFieldException("Message not found.");
     }
 
     private MessageEntity saveMessage(MessageBindingModel incomingMessage, String senderUsername)

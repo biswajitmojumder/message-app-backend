@@ -21,4 +21,5 @@ public interface ChatService {
     ChatEntity createNewChat(String loggedUserUsername, String otherUserUsername) throws ChatNotFoundException, UserNotFoundException;
     Boolean doesUserParticipateInChat(String username, Long chatId) throws UserNotFoundException;
     Boolean doesLoggedUserHaveAChatWithOtherUser(String loggedUserUsername, String otherUserUsername);
+    Boolean doesChatExist(Long chatId);
 }

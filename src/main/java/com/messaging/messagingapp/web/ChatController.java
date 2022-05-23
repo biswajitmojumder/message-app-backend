@@ -70,13 +70,11 @@ public class ChatController {
         }
     }
 
-    @PatchMapping("/null-unseen-messages")
-    public ResponseEntity<?> nullUnseenMessages(@RequestParam("chatId") Optional<Long> chatId, Principal principal){
-        if(chatId.isEmpty() || chatId.get() == null)
-            return ResponseEntity.badRequest().body("Field cannot be empty");
+    @PatchMapping("/{chatId}/null-unseen-messages")
+    public ResponseEntity<?> nullUnseenMessages(@PathVariable Long chatId, Principal principal){
         try {
             participantServiceImplementation
-                    .nullUnseenMessagesForParticipantByLoggedUserAndChatId(principal.getName(), chatId.get());
+                    .nullUnseenMessagesForParticipantByLoggedUserAndChatId(principal.getName(), chatId);
         } catch (ChatNotFoundException e) {
             return ResponseEntity.status(404).body(e.getLocalizedMessage());
         }

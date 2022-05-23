@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.messaging.messagingapp.data.entities.ChatEntity;
 import com.messaging.messagingapp.data.repositories.ChatRepository;
+import com.messaging.messagingapp.data.repositories.MessageRepository;
 import com.messaging.messagingapp.data.repositories.ParticipantRepository;
 import com.messaging.messagingapp.data.repositories.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -22,11 +23,13 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 @ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
-public class ChatControllerTest {
+public class ChatControllerTests {
     final String loggedUserUsername = "admin";
     final String secondUserUsername = "test";
     final String thirdUserUsername = "test2";
@@ -38,6 +41,9 @@ public class ChatControllerTest {
     private ChatRepository chatRepository;
 
     @Autowired
+    private MessageRepository messageRepository;
+
+    @Autowired
     private ParticipantRepository participantRepository;
 
     @Autowired
@@ -45,6 +51,7 @@ public class ChatControllerTest {
 
     @AfterEach
     void outro(){
+        messageRepository.deleteAll();
         participantRepository.deleteAll();
         chatRepository.deleteAll();
     }
@@ -309,6 +316,35 @@ public class ChatControllerTest {
     void changeParticipantNameOfNonExistentChat() throws Exception{
         mockMvc.perform(patch("/chat/210/participant/" + this.loggedUserUsername)
                         .param("nickname", "test"))
+                .andExpect(status().is(404))
+                .andExpect(content().string("Chat not found."));
+    }
+
+    @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    void nullUnseenMessages() throws Exception{
+        createChat();
+        MultiValueMap<String, String> message = new LinkedMultiValueMap<>();
+        message.add("textContent", "test");
+        message.add("imageLink", "");
+        message.add("chatId", "1");
+        message.add("messageReplyId", "");
+        mockMvc.perform(post("/message/send").params(message).with(user(this.secondUserUsername)))
+                .andExpect(status().is(200));
+        mockMvc.perform(get("/chat/all").with(user(this.loggedUserUsername)))
+                .andExpect(status().is(200))
+                .andExpect(jsonPath("$.[0].unseenMessages", is(true)));
+        mockMvc.perform(patch("/chat/1/null-unseen-messages").with(user(this.loggedUserUsername)))
+                .andExpect(status().is(200));
+        mockMvc.perform(get("/chat/all").with(user(this.loggedUserUsername)))
+                .andExpect(status().is(200))
+                .andExpect(jsonPath("$.[0].unseenMessages", is(false)));
+    }
+
+    @Test
+    @WithMockUser("admin")
+    void nullUnseenMessagesForANonExistentChat() throws Exception{
+        mockMvc.perform(patch("/chat/210/null-unseen-messages"))
                 .andExpect(status().is(404))
                 .andExpect(content().string("Chat not found."));
     }

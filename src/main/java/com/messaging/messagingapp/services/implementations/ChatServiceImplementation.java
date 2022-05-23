@@ -170,6 +170,11 @@ public class ChatServiceImplementation implements ChatService {
         return false;
     }
 
+    @Override
+    public Boolean doesChatExist(Long chatId) {
+        return chatRepository.existsById(chatId);
+    }
+
     private Boolean isChatClosedForLoggedUser(String loggedUserUsername, Long chatId) throws ChatNotFoundException {
         ChatParticipantEntity chat = returnInnerChatById(chatId)
                 .getParticipants()

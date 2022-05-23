@@ -21,8 +21,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.util.Optional;
-
 @ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -48,26 +46,5 @@ public class AdminControllerTests {
         registerUser.add("confirmPassword", "test");
         registerUser.add("email", "test@test.bg");
         registerUser.add("publicName", "test test");
-    }
-
-    @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN", "USER"})
-    void registerUserSuccessfully() throws Exception {
-        mockMvc.perform(post("/admin/register").params(registerUser))
-                .andExpect(status().is(302));
-        Assertions.assertEquals(2, userRepository.count());
-        Optional<UserEntity> registeredUser = userRepository.findByUsername(registerUser.getFirst("username"));
-        Assertions.assertTrue(registeredUser.isPresent());
-        Assertions.assertEquals(registerUser.getFirst("email"), registeredUser.get().getEmail());
-        Assertions.assertEquals(registerUser.getFirst("publicName"), registeredUser.get().getPublicName());
-        Assertions.assertTrue(
-                passwordEncoder.matches(registerUser.getFirst("password"), registeredUser.get().getPassword()));
-    }
-
-    @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN", "USER"})
-    void registerUserWithTakenUsername() throws Exception {
-        mockMvc.perform(post("/admin/register").params(registerUser))
-                .andExpect(status().is(301));
     }
 }

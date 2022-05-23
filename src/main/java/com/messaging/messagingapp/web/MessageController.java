@@ -43,14 +43,12 @@ public class MessageController {
             @PathVariable Long chatId,
             @RequestParam(value = "page", required = false, defaultValue = "0") Integer pageNum,
             Principal principal){
-        if (chatId == null)
-            return ResponseEntity.badRequest().body("Field cannot be empty");
         List<MessageViewModel> messages;
         try {
             messages = messageServiceImplementation.loadPageableMessagesForChat(chatId, principal.getName(), pageNum);
-        } catch (IllegalAccessException | ChatNotFoundException e) {
+        } catch (IllegalAccessException e) {
             return ResponseEntity.status(403).build();
-        } catch (UserNotFoundException e) {
+        } catch (UserNotFoundException | ChatNotFoundException e) {
             return ResponseEntity.status(404).body(e.getLocalizedMessage());
         }
         return ResponseEntity.ok(messages);
@@ -58,8 +56,6 @@ public class MessageController {
 
     @DeleteMapping("{messageId}")
     public ResponseEntity<?> deleteChatMessage(@PathVariable Long messageId, Principal principal){
-        if(messageId == null)
-            return ResponseEntity.badRequest().body("Field cannot be empty");
         try {
             messageServiceImplementation.deleteMessageById(messageId, principal.getName());
         } catch (NoSuchFieldException e) {

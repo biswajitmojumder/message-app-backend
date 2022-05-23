@@ -8,24 +8,27 @@ import com.messaging.messagingapp.data.repositories.UserRepository;
 import com.messaging.messagingapp.services.implementations.UserServiceImplementation;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
-@Profile("test")
+@Profile({"test"})
 public class TestDataInit implements CommandLineRunner {
     private final UserServiceImplementation userServiceImplementation;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
     private UserEntity firstUser;
     private UserEntity secondUser;
     private UserEntity thirdUser;
 
-    public TestDataInit(UserServiceImplementation userServiceImplementation, UserRepository userRepository, RoleRepository roleRepository) {
+    public TestDataInit(UserServiceImplementation userServiceImplementation, UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userServiceImplementation = userServiceImplementation;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -50,7 +53,7 @@ public class TestDataInit implements CommandLineRunner {
     private void userInit(){
         this.firstUser = new UserEntity();
         firstUser.setUsername("admin");
-        firstUser.setPassword("test");
+        firstUser.setPassword(passwordEncoder.encode("test"));
         firstUser.setPublicName("admin admin");
         firstUser.setEmail("test@admin.com");
         firstUser.setRoles(List.of(
@@ -59,7 +62,7 @@ public class TestDataInit implements CommandLineRunner {
 
         this.secondUser = new UserEntity();
         secondUser.setUsername("test");
-        secondUser.setPassword("test");
+        secondUser.setPassword(passwordEncoder.encode("test"));
         secondUser.setPublicName("test test");
         secondUser.setEmail("test@test.com");
         secondUser.setRoles(List.of(
@@ -67,7 +70,7 @@ public class TestDataInit implements CommandLineRunner {
 
         this.thirdUser = new UserEntity();
         thirdUser.setUsername("test2");
-        thirdUser.setPassword("test");
+        thirdUser.setPassword(passwordEncoder.encode("test"));
         thirdUser.setPublicName("test2 test2");
         thirdUser.setEmail("test2@test.com");
         thirdUser.setRoles(List.of(
