@@ -1,4 +1,4 @@
-package com.messaging.messagingapp;
+package com.messaging.messagingapp.ControllerTests;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

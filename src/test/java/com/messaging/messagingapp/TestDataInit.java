@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-@Profile({"test"})
+@Profile("test")
 public class TestDataInit implements CommandLineRunner {
     private final UserServiceImplementation userServiceImplementation;
     private final UserRepository userRepository;

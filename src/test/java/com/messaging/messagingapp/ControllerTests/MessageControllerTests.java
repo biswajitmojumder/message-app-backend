@@ -1,4 +1,4 @@
-package com.messaging.messagingapp;
+package com.messaging.messagingapp.ControllerTests;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;

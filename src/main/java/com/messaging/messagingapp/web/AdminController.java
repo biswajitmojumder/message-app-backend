@@ -35,7 +35,6 @@ public class AdminController {
         model.addAttribute("RegisterUserBindingModel", new RegisterUserBindingModel());
         if(!model.containsAttribute("errors"))
             model.addAttribute("errors", new ArrayList<>());
-        else System.out.println("ima error");
         return "register";
     }
 
@@ -55,24 +54,24 @@ public class AdminController {
         return "userList";
     }
 
-    @GetMapping("/expand")
-    public String expandUser(@RequestParam Long id, RedirectAttributes redirectAttributes){
-        AdminSearchUserViewModel user;
-        try {
-            user = adminServiceImplementation.searchUserById(id);
-        } catch (UserNotFoundException e) {
-            return "redirect:search";
-        }
-        redirectAttributes.addFlashAttribute("user", user);
-        return "redirect:user-details";
-    }
-
     @GetMapping("/user-details")
     public String foundUserView(Model model){
         if (!model.containsAttribute("user")){
             model.addAttribute("user", new AdminSearchUserViewModel());
         }
         return "userDetails";
+    }
+
+    @GetMapping("/expand")
+    public String expandUser(@RequestParam Long id, RedirectAttributes redirectAttributes){
+        AdminSearchUserViewModel user;
+        try {
+            user = adminServiceImplementation.searchUserById(id);
+        } catch (UserNotFoundException e) {
+            return "redirect:user-management";
+        }
+        redirectAttributes.addFlashAttribute("user", user);
+        return "redirect:user-details";
     }
 
     @PostMapping("/register")
@@ -98,17 +97,21 @@ public class AdminController {
         return "redirect:register";
     }
 
-    @PostMapping("/search")
+    @GetMapping("/search")
     public String search(@RequestParam String searchValue, @RequestParam String searchType, RedirectAttributes redirectAttributes){
         List<String> errors = new ArrayList<>();
         if (searchType.equals("id")){
             long id;
             try{
-                id = Long.parseLong(searchValue);
-                AdminSearchUserViewModel foundUser = adminServiceImplementation.searchUserById(id);
-                redirectAttributes.addFlashAttribute("user", foundUser);
-                return "redirect:user-details";
-            }catch (NumberFormatException e){
+                if (searchValue.trim().isEmpty())
+                    throw new InvalidParameterException();
+                else {
+                    id = Long.parseLong(searchValue);
+                    AdminSearchUserViewModel foundUser = adminServiceImplementation.searchUserById(id);
+                    redirectAttributes.addFlashAttribute("user", foundUser);
+                    return "redirect:user-details";
+                }
+            }catch (NumberFormatException | InvalidParameterException e){
                 errors.add("Invalid search value");
             }catch (UserNotFoundException e) {
                 errors.add(e.getLocalizedMessage());
@@ -126,7 +129,6 @@ public class AdminController {
                 return "redirect:list";
             }
         }
-        System.out.println(errors.size());
         redirectAttributes.addFlashAttribute("errors", errors);
         return "redirect:user-management";
     }
